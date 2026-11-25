@@ -835,14 +835,17 @@ function addBox(x,y,z,w,h,d,color,o){
 function addMesh(geo,color,x,y,z,sx,sy,sz,ry,o){ const m=new THREE.Mesh(geo,(o&&o.mat)||mat(color,o||{})); m.scale.set(sx,sy,sz); m.position.set(x,y,z); if(ry) m.rotation.y=ry; m.userData.st=1; worldRoot.add(m); return m; }
 function texCanvas(size,fn){ const c=document.createElement('canvas'); c.width=c.height=size; fn(c.getContext('2d'),size); return c; }
 const GROUND_SPAN=4200/1800;        // 地面變大了，貼圖重複次數要跟著變，不然每一格被拉大兩倍會糊掉
-function groundTex(fn,repeat){ const t=new THREE.CanvasTexture(texCanvas(256,fn)); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(repeat*GROUND_SPAN,repeat*GROUND_SPAN); t.anisotropy=4; t.encoding=THREE.sRGBEncoding; return t; }
+const GROUND_PLANE=4200;
+function groundTex(fn,repeat){ const t=new THREE.CanvasTexture(texCanvas(256,fn)); t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  const r=repeat*GROUND_SPAN; t.repeat.set(r,r); t.userData={tile:GROUND_PLANE/r};   // tile = 一張貼圖covers幾公尺
+  t.anisotropy=4; t.encoding=THREE.sRGBEncoding; return t; }
 const grassT=groundTex((g,s)=>{ g.fillStyle='#71904a'; g.fillRect(0,0,s,s); for(let i=0;i<3500;i++){ const v=Math.random(); g.fillStyle=v<.5?'rgba(88,118,56,.55)':v<.85?'rgba(135,163,84,.45)':'rgba(150,134,92,.4)'; const z=Math.random()*3+1; g.fillRect(Math.random()*s,Math.random()*s,z,z);} },90);
 const lawnT=groundTex((g,s)=>{ g.fillStyle='#5f8a3f'; g.fillRect(0,0,s,s); for(let i=0;i<3000;i++){ const v=Math.random(); g.fillStyle=v<.6?'rgba(74,110,48,.5)':'rgba(122,160,78,.45)'; const z=Math.random()*3+1; g.fillRect(Math.random()*s,Math.random()*s,z,z);} },110);
 const sandT=groundTex((g,s)=>{ g.fillStyle='#cdae79'; g.fillRect(0,0,s,s); for(let i=0;i<3000;i++){ const v=Math.random(); g.fillStyle=v<.5?'rgba(190,160,110,.5)':v<.85?'rgba(222,200,158,.5)':'rgba(150,124,84,.35)'; const z=Math.random()*3+1; g.fillRect(Math.random()*s,Math.random()*s,z,z);} },70);
 const asphaltT=groundTex((g,s)=>{ g.fillStyle='#4a4e52'; g.fillRect(0,0,s,s); for(let i=0;i<4000;i++){ const v=Math.random(); g.fillStyle=v<.5?'rgba(60,64,68,.6)':'rgba(86,90,95,.4)'; const z=Math.random()*3+1; g.fillRect(Math.random()*s,Math.random()*s,z,z);} },80);
 const gridT=groundTex((g,s)=>{ g.fillStyle='#0e1522'; g.fillRect(0,0,s,s); g.strokeStyle='rgba(60,210,255,.5)'; g.lineWidth=2; for(let i=0;i<=4;i++){ const p=i*s/4; g.beginPath(); g.moveTo(p,0); g.lineTo(p,s); g.moveTo(0,p); g.lineTo(s,p); g.stroke(); } g.strokeStyle='rgba(60,210,255,.14)'; g.lineWidth=1; for(let i=0;i<=16;i++){ const p=i*s/16; g.beginPath(); g.moveTo(p,0); g.lineTo(p,s); g.moveTo(0,p); g.lineTo(s,p); g.stroke(); } },60);
 const groundMat=new THREE.MeshStandardMaterial({map:grassT,roughness:1,metalness:0});
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(4200,4200),groundMat); ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(GROUND_PLANE,GROUND_PLANE),groundMat); ground.rotation.x=-Math.PI/2; ground.position.y=-.08; ground.receiveShadow=true; scene.add(ground);
 
 function boundary(color,wallH){
   [[0,-MAP,MAP*2,.3],[0,MAP,MAP*2,.3],[-MAP,0,.3,MAP*2],[MAP,0,.3,MAP*2]].forEach(f=>{
@@ -1048,7 +1051,6 @@ function crates(x,z){ const n=2+Math.floor(srand()*3);
 /* ---- 遠景與地被：地平線的山稜、地面色塊、草叢 ---- */
 const peakGeo=new THREE.ConeGeometry(1,1,5,1);
 const slabGeo=new THREE.BoxGeometry(1,1,1);
-const patchGeo=new THREE.CircleGeometry(1,9);
 const tuftGeo=new THREE.ConeGeometry(.17,1,4,1,true);
 const hazeCol=(base,fog,t)=>new THREE.Color(base).lerp(new THREE.Color(fog),t).getHex();
 function scenicMat(col){ const m=mat(col,{rough:1}); noShadow.add(m); return m; }
@@ -1060,61 +1062,110 @@ function horizonMat(col){
   m.color.convertSRGBToLinear(); noShadow.add(m);
   return hazeMats[col]=m;
 }
-// 山稜一圈一圈往外退，愈遠愈淡；只用四段淡化程度，材質數量才不會爆掉
+// 山稜一圈一圈往外退，愈遠愈淡。尺寸一定要跟「距離」綁在一起算：
+// 以前用絕對公尺數，大地圖上就變成 400 公尺高、900 公尺寬的巨牆貼在場邊，整張圖都被蓋掉。
 function horizonRange(){
   const cm=curMap, sc=cm.scenic||{};
   if(sc.off) return;
   const rock=sc.rock==null?cm.hemi[1]:sc.rock;
-  const cols=[.52,.66,.78].map(t=>horizonMat(hazeCol(rock,cm.fogC,t)));
-  const R0=Math.max(MAP*1.25,230), rings=sc.rings||3;
+  const cols=[.5,.64,.76].map(t=>horizonMat(hazeCol(rock,cm.fogC,t)));
+  const R0=Math.max(MAP*1.35+40,320);                     // 一定在地圖外面，又不會遠到看不見
+  const rings=sc.rings||3, hi=sc.tall?[.17,.33]:[.10,.21];
   for(let k=0;k<rings;k++){
-    const r0=R0*(1+k*.42), col=cols[Math.min(cols.length-1,k)];
-    const n=Math.round((sc.per||24)*(1+k*.55));
+    const col=cols[Math.min(cols.length-1,k)];
+    const n=Math.round((sc.per||24)*(1+k*.5));
     for(let i=0;i<n;i++){
-      const a=(i+srnd(-.42,.42))/n*Math.PI*2, r=r0*srnd(.9,1.15);
-      const h=(sc.tall?srnd(80,240):srnd(44,140))*(1+k*.42), w=h*srnd(.8,2.2);
-      if(sc.slab) addMesh(slabGeo,0,Math.cos(a)*r,h/2,Math.sin(a)*r,w*.45,h,w*.45,srand()*6,{mat:col});
-      else addMesh(peakGeo,0,Math.cos(a)*r,h/2-4,Math.sin(a)*r,w,h,w,srand()*6,{mat:col});
+      const a=(i+srnd(-.42,.42))/n*Math.PI*2;
+      const r=Math.min(980,R0*(1+k*.55)*srnd(.94,1.1));
+      const h=r*srnd(hi[0],hi[1]);                          // 高度 = 距離的一到三成，看起來才像山
+      // rad 是山的水平半徑：不能超過距離的三成，也絕對不能伸進地圖裡
+      const rad=Math.min(r*.3,h*srnd(.45,.95),(r-MAP-20)*.85);
+      if(rad<4) continue;
+      if(sc.slab) addMesh(slabGeo,0,Math.cos(a)*r,h/2,Math.sin(a)*r,rad*1.4,h,rad*1.4,srand()*6,{mat:col});
+      else addMesh(peakGeo,0,Math.cos(a)*r,h/2-4,Math.sin(a)*r,rad,h,rad,srand()*6,{mat:col});
     }
   }
 }
-// 地面不要一張貼圖鋪到底：大塊色斑、踩出來的小路、草叢，走起來才有層次
+// 地面不要一張貼圖鋪到底，但也不能靠一堆平貼的圓盤 —— 那些圓盤彼此共面會閃，
+// 大一點的還會在腳邊露出一條多邊形的直邊。改成一張有頂點顏色的地形網格：
+// 顏色是連續漸層，沒有邊、沒有共面衝突，成本也只有幾萬個頂點。
+let terrainMesh=null;
+const terrainMat=new THREE.MeshStandardMaterial({roughness:1,metalness:0,vertexColors:true});
+const terrainTex={};
+const SHADE={lush:[.86,1.03,.78],dry:[1.12,1.05,.86],dirt:[1.2,1.0,.74]};
 function groundDetail(){
   const cm=curMap, sc=cm.scenic||{};
-  const patches=(sc.patch||[0x7d9455,0x66803f,0x8a8f5c]).map(scenicMat);
-  const pick=arr=>arr[Math.floor(srand()*arr.length)];
-  const disc=(x,z,r,m)=>{ const p=addMesh(patchGeo,0,x,.04+srand()*.01,z,r,r,r,0,{mat:m}); p.rotation.x=-Math.PI/2; return p; };
-  // 大小不一的色斑，大塊的先鋪、小塊的疊上去
-  const np=Math.min(1500,Math.round(MAP*MAP/110));
-  for(let i=0;i<np;i++){
-    const x=srnd(-MAP,MAP), z=srnd(-MAP,MAP);
-    const r=srand()<.22?srnd(11,26):srnd(3,10);
-    if(!isFree(x,z,r*.5,r*.5,0)) continue;
-    disc(x,z,r,pick(patches));
-  }
-  // 幾條被踩出來的土路，從地圖一側蜿蜒到另一側
-  const dirt=scenicMat(sc.dirt==null?0x8c7850:sc.dirt);
-  const tracks=sc.tracks==null?4:sc.tracks;
-  for(let t=0;t<tracks;t++){
-    let a=srand()*Math.PI*2, x=Math.cos(a)*MAP*.95, z=Math.sin(a)*MAP*.95;
-    let dir=Math.atan2(-z,-x)+srnd(-.5,.5);
-    for(let k=0;k<Math.round(MAP/2.2);k++){
-      dir+=srnd(-.16,.16);
-      x+=Math.cos(dir)*2.4; z+=Math.sin(dir)*2.4;
-      if(Math.abs(x)>MAP-2||Math.abs(z)>MAP-2) break;
-      if(isFree(x,z,1,1,0)) disc(x,z,srnd(1.5,2.6),dirt);
+  const sh=Object.assign({},SHADE,sc.shade||{});
+  const span=MAP*2+28;
+  const S=Math.max(40,Math.min(180,Math.round(span/3.4)));     // 一格約 3.4 公尺
+  const geo=new THREE.PlaneGeometry(span,span,S,S);
+  geo.rotateX(-Math.PI/2);
+  const W=S+1, N=W*W, col=new Float32Array(N*3);
+  for(let i=0;i<N;i++){ col[i*3]=1; col[i*3+1]=1; col[i*3+2]=1; }
+  const half=span/2, cell=span/S;
+  const ix=x=>(x+half)/cell, iz=z=>(z+half)/cell;
+  // 把一塊顏色蓋上去：中心最濃，往外平滑收掉
+  function stamp(x,z,r,m,strength){
+    const x0=Math.max(0,Math.floor(ix(x-r))), x1=Math.min(S,Math.ceil(ix(x+r)));
+    const z0=Math.max(0,Math.floor(iz(z-r))), z1=Math.min(S,Math.ceil(iz(z+r)));
+    for(let gz=z0;gz<=z1;gz++){
+      const wz=-half+gz*cell;
+      for(let gx=x0;gx<=x1;gx++){
+        const wx=-half+gx*cell;
+        const d=Math.hypot(wx-x,wz-z); if(d>r) continue;
+        let t=1-d/r; t=t*t*(3-2*t);                              // smoothstep
+        // 靠近地圖邊緣就淡掉，才不會在外圈那張大地面上接出一條線
+        const edge=Math.min(1,(MAP+10-Math.max(Math.abs(wx),Math.abs(wz)))/22);
+        t*=strength*Math.max(0,Math.min(1,edge));
+        if(t<=0) continue;
+        const o=(gz*W+gx)*3;
+        col[o]+=(m[0]-col[o])*t; col[o+1]+=(m[1]-col[o+1])*t; col[o+2]+=(m[2]-col[o+2])*t;
+      }
     }
   }
+  // 大片的乾／濕色塊
+  const blobs=Math.min(340,Math.round(MAP*MAP/420));
+  for(let i=0;i<blobs;i++){
+    const x=srnd(-MAP,MAP), z=srnd(-MAP,MAP);
+    const r=srand()<.3?srnd(26,62):srnd(10,28);
+    stamp(x,z,r,srand()<.5?sh.lush:sh.dry,srnd(.45,.95));
+  }
+  // 幾條被踩出來的土路，從地圖一側蜿蜒到另一側
+  const tracks=sc.tracks==null?4:sc.tracks;
+  for(let t=0;t<tracks;t++){
+    let a=srand()*Math.PI*2, x=Math.cos(a)*MAP*.92, z=Math.sin(a)*MAP*.92;
+    let dir=Math.atan2(-z,-x)+srnd(-.5,.5);
+    for(let k=0;k<Math.round(MAP/1.6);k++){
+      dir+=srnd(-.14,.14);
+      x+=Math.cos(dir)*1.8; z+=Math.sin(dir)*1.8;
+      if(Math.abs(x)>MAP-2||Math.abs(z)>MAP-2) break;
+      stamp(x,z,srnd(3.4,5.2),sh.dirt,.5);
+    }
+  }
+  geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+  const src=cm.tex||grassT;
+  let tex=terrainTex[cm.id];
+  if(!tex||tex.image!==src.image){ tex=src.clone(); tex.needsUpdate=true; terrainTex[cm.id]=tex; }
+  const tile=(src.userData&&src.userData.tile)||20;
+  tex.wrapS=tex.wrapT=THREE.RepeatWrapping; tex.repeat.set(span/tile,span/tile);
+  terrainMat.map=tex; terrainMat.needsUpdate=true;
+  terrainMesh=new THREE.Mesh(geo,terrainMat);
+  terrainMesh.receiveShadow=true; terrainMesh.castShadow=false;
+  terrainMesh.position.y=0; terrainMesh.matrixAutoUpdate=false; terrainMesh.updateMatrix();
+  worldRoot.add(terrainMesh);
+
   if(sc.grass===false||quality==='low') return;
-  const tm=(sc.tuft||[0x6d8a40,0x5c7735,0x7e9a4b]).map(scenicMat);
+  const pick=arr=>arr[Math.floor(srand()*arr.length)];
+  // 草是「草」，不是立在地上的三角錐：葉片要細、要矮，而且顏色要比地面深一點
+  const tm=(sc.tuft||[0x5c7a33,0x4e6b29,0x688a3c]).map(scenicMat);
   const nt=Math.min(quality==='high'?9000:5000,Math.round(MAP*MAP/11));
   for(let i=0;i<nt;i++){
     const x=srnd(-MAP+2,MAP-2), z=srnd(-MAP+2,MAP-2);
-    if(!isFree(x,z,1.2,1.2,0)) continue;
-    const c=pick(tm), s=srnd(.45,1.5), blades=2+Math.floor(srand()*3);
+    if(!isFree(x,z,1,1,0)) continue;
+    const c=pick(tm), sz=srnd(.26,.6), blades=3+Math.floor(srand()*3);
     for(let k=0;k<blades;k++){
-      const bs=s*srnd(.6,1.1);
-      addMesh(tuftGeo,0,x+srnd(-.6,.6),bs*.5,z+srnd(-.6,.6),srnd(1.4,2.6),bs,srnd(1.4,2.6),srand()*6,{mat:c});
+      const bs=sz*srnd(.7,1.15), rw=srnd(.45,.95);
+      addMesh(tuftGeo,0,x+srnd(-.33,.33),bs*.5,z+srnd(-.33,.33),rw,bs,rw,srand()*6,{mat:c});
     }
   }
 }
@@ -1657,7 +1708,7 @@ function extraCover(){
 const MAPS=[
   {id:'arena',crowd:'small',best:['tdm','duel','gun'],name:'競技場',sub:'對稱場地 · 死鬥專用',size:55,base:55,seed:4242,build:arenaLayout,
    tex:asphaltT,mm:'#54584f',fence:0xa9a195,fog:[70,300],fogC:0xc2cbd2,
-   scenic:{rock:0x6a7368,grass:false,patch:[0x5a5e5a,0x6a6e68,0x4e5250],per:20},
+   scenic:{rock:0x6a7368,grass:false,per:20,tracks:2,shade:{lush:[.93,.945,.955],dry:[1.07,1.055,1.04],dirt:[1.02,.98,.93]}},
    sky:['#6d9cc4','#b9cedd','#dfe0d8'],sun:[0xfff1dc,2.1,[70,140,50]],hemi:[0xe6f0ff,0x60655a,.45]},
   {id:'island',crowd:'big',best:['br'],name:'荒島',sub:'開闊地形 · 房舍與丘陵',size:178,base:120,seed:1120,build:islandLayout,
    tex:grassT,mm:'#4f6b3a',fence:0x7d6a50,fog:[70,300],fogC:0xb4d3e6,
@@ -1665,28 +1716,28 @@ const MAPS=[
    sky:['#6ea8d8','#b9d8ea','#dfe7df'],sun:[0xfff0d4,2.1,[90,150,60]],hemi:[0xe3f1ff,0x5d6b3c,.42]},
   {id:'mansion',crowd:'small',best:['tdm','duel'],name:'豪宅',sub:'兩層大宅 · 泳池與庭園',size:132,base:80,seed:777,build:mansionLayout,
    tex:lawnT,mm:'#56763f',fence:0xb9ad94,fog:[60,260],fogC:0xc3d6e2,
-   scenic:{rock:0x6b7a5c,per:22,patch:[0x6f9346,0x5d7f3a,0x82a053]},
+   scenic:{rock:0x6b7a5c,per:22,tracks:3},
    sky:['#7fb0d8','#c6dcea','#e6e2d6'],sun:[0xfff3dc,2.2,[70,130,50]],hemi:[0xe6f2ff,0x6a7b48,.45]},
   {id:'park',crowd:'both',best:['snipe','br','gun'],name:'大公園',sub:'湖泊 · 樹林 · 涼亭',size:156,base:100,seed:2024,build:parkLayout,
    tex:lawnT,mm:'#4e7a3c',fence:0x6f6a52,fog:[80,320],fogC:0xbfd9e8,
-   scenic:{rock:0x5f7a4e,per:24,patch:[0x6f9346,0x58792f,0x86a655]},
+   scenic:{rock:0x5f7a4e,per:24,tracks:4},
    sky:['#66a6dc','#bcd9ee','#e3ead9'],sun:[0xfff1d8,2.0,[60,140,80]],hemi:[0xe8f4ff,0x5f7a40,.46]},
   {id:'palace',crowd:'both',best:['snipe','br'],name:'總統府',sub:'廣場 · 列柱 · 圓頂',size:148,base:95,seed:1945,build:palaceLayout,
    tex:groundTex((g,s)=>{ g.fillStyle='#9aa08f'; g.fillRect(0,0,s,s); for(let i=0;i<2600;i++){ g.fillStyle=Math.random()<.5?'rgba(130,138,120,.5)':'rgba(176,180,160,.45)'; const z=Math.random()*3+1; g.fillRect(Math.random()*s,Math.random()*s,z,z);} },80),
    mm:'#7c8370',fence:0xc8bda4,fog:[75,300],fogC:0xc8d8e0,
-   scenic:{rock:0x767e68,per:22,patch:[0x8d9382,0x7b8171,0x9ba08c],grass:false},
+   scenic:{rock:0x767e68,per:22,grass:false,tracks:3,shade:{lush:[.93,.945,.955],dry:[1.07,1.055,1.04],dirt:[1.02,.98,.93]}},
    sky:['#5f9fd4','#bcd6e8','#e7e4d8'],sun:[0xfff2de,2.2,[80,150,40]],hemi:[0xe4f0ff,0x73765f,.45]},
   {id:'office',crowd:'small',best:['tdm','duel','gun'],name:'辦公大樓',sub:'五層樓 + 頂樓直升機坪',size:120,base:70,seed:505,build:officeLayout,
    tex:asphaltT,mm:'#4b4f53',fence:0x6d7276,fog:[60,260],fogC:0xb8c3cc,
-   scenic:{rock:0x5c646a,slab:true,tall:true,grass:false,patch:[0x44484c,0x50545a,0x3c4044],per:18},
+   scenic:{rock:0x5c646a,slab:true,tall:true,grass:false,per:18,tracks:2,shade:{lush:[.93,.945,.955],dry:[1.07,1.055,1.04],dirt:[1.02,.98,.93]}},
    sky:['#5b8db5','#aec4d4','#d8dadb'],sun:[0xfff0dc,1.9,[60,160,70]],hemi:[0xdfeaf5,0x4e5358,.45]},
   {id:'desert',crowd:'big',best:['snipe','br'],name:'沙漠',sub:'峽谷 · 沙丘 · 綠洲',size:190,base:125,seed:3030,build:desertLayout,
    tex:sandT,mm:'#b79a6c',fence:0xa98b63,fog:[90,380],fogC:0xe3cfa8,
-   scenic:{rock:0xa98a5c,per:26,rings:3,tall:true,grass:false,patch:[0xc7a874,0xd8bd8c,0xb4945e]},
+   scenic:{rock:0xa98a5c,per:26,rings:3,tall:true,grass:false,tracks:5,shade:{lush:[.9,.87,.79],dry:[1.08,1.04,.93],dirt:[1.12,1.0,.82]}},
    sky:['#4f9fd6','#b8d4e2','#f0dcb4'],sun:[0xffe9bc,2.5,[110,140,30]],hemi:[0xf2e4c8,0xb09060,.5]},
   {id:'tech',crowd:'big',best:['tdm','gun'],name:'科技世界',sub:'霓虹高塔 · 空中廊道',size:166,base:105,seed:8086,build:techLayout,
    tex:gridT,mm:'#16202c',fence:0x2b3442,fog:[55,250],fogC:0x101826,
-   scenic:{rock:0x1d2735,slab:true,tall:true,grass:false,patch:[0x121b28,0x18222f,0x0e1520],per:22,rings:4},
+   scenic:{rock:0x1d2735,slab:true,tall:true,grass:false,per:22,rings:4,tracks:0,shade:{lush:[.82,.9,1.06],dry:[1.1,1.06,1.0],dirt:[.9,.95,1.04]}},
    sky:['#07080f','#16213a','#2b1f4a'],sun:[0x9fd8ff,1.0,[-80,120,-60]],hemi:[0x5a7fff,0x120f22,.3]},
 ];
 let curMap=MAPS[0];
@@ -1707,6 +1758,7 @@ function mergeStatic(){
   });
 }
 function clearWorld(){
+  terrainMesh=null;
   for(let i=worldRoot.children.length-1;i>=0;i--){
     const o=worldRoot.children[i];
     if(o.geometry&&o.geometry!==boxGeo) o.geometry.dispose();
@@ -4733,6 +4785,10 @@ if(typeof location!=='undefined'&&location.hash==='#dev') window.__dev={
   lootSig(){ return pickups.length+'/'+pickups.slice(0,6).map(p=>p.pid+':'+p.type+':'+p.x.toFixed(1)).join(','); },
   grabNear(){ const p=nearestPickup(); if(!p) return 'none'; const id=p.pid; removePickup(p); return 'took '+id; },
   tpTo(x,z){ P.pos.set(x,P.pos.y,z); return 'ok'; },
+  goMap(id,mul){ SET.map=id; buildMap(id,mul||1); builtKey=id+'|'+(mul||1); resetGame(); spawnGround();
+    state='playing'; paused=false; P.dropMode=null; P.pos.set(0,1.4,0); P.pitch=-.12; P.yaw=0;
+    for(const b of bots){ b.dropping=false; b.group.visible=true; }
+    last=performance.now(); return id+' MAP='+MAP; },
   forceAirdrop(){ dropT=0; return 'armed'; },
   get airdrops(){ return drops.map(d=>({aid:d.aid,x:+d.x.toFixed(1),z:+d.z.toFixed(1),landed:d.landed,optic:d.optic})); },
   toPlaying(){ P.dropMode=null; for(const b of bots){ if(!b.net){ b.dropping=false; b.group.visible=true; } if(b.chute) b.chute.visible=false; } state='playing'; drop.on=false; return 'playing'; },
