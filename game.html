@@ -471,10 +471,18 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     <div class="row" style="text-align:left">
       <h3>滑鼠靈敏度 <span id="sensV">1.0</span></h3>
       <input type="range" id="sens" min="0.3" max="3" step="0.1" value="1">
+      <h3 style="margin-top:10px">視野 FOV <span id="fovV">75</span></h3>
+      <input type="range" id="fov" min="65" max="105" step="1" value="75">
       <h3 style="margin-top:10px">音量 <span id="volV2">60%</span></h3>
       <input type="range" id="vol2" min="0" max="1" step="0.05" value="0.6">
+      <h3 style="margin-top:12px">畫質<small style="font-weight:400;color:#8ea0ac">　會卡就調低</small></h3>
+      <div class="seg" id="qual">
+        <button data-q="high">高<small>完整陰影</small></button>
+        <button data-q="mid" class="on">中<small>陰影省一半</small></button>
+        <button data-q="low">低<small>關閉陰影</small></button>
+      </div>
     </div>
-    <div class="cta" style="justify-content:center"><button class="btn" id="resumeBtn">繼續</button><button class="btn ghost" id="quitBtn">回到選單</button></div>
+    <div class="cta" style="justify-content:center"><button class="btn" id="resumeBtn">繼續</button><button class="btn ghost" id="quitBtn">離開比賽</button></div>
   </div>
 </div>
 
@@ -650,7 +658,13 @@ const scene=new THREE.Scene(); scene.background=new THREE.Color(SKY); scene.fog=
 const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.05,1400); camera.rotation.order='YXZ'; scene.add(camera);
 const hemi=new THREE.HemisphereLight(0xe3f1ff,0x5d6b3c,.78); scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xfff0d4,1.05); sun.position.set(90,150,60); sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048); Object.assign(sun.shadow.camera,{left:-150,right:150,top:150,bottom:-150,near:10,far:460}); sun.shadow.bias=-.0007; sun.shadow.normalBias=.03;
+// 陰影相機只罩住玩家附近 SHADOW_HALF 公尺：貼圖密度高很多，陰影 pass 也只畫這一塊
+const SHADOW_HALF=72, SHADOW_MAP=2048;
+sun.shadow.mapSize.set(SHADOW_MAP,SHADOW_MAP);
+Object.assign(sun.shadow.camera,{left:-SHADOW_HALF,right:SHADOW_HALF,top:SHADOW_HALF,bottom:-SHADOW_HALF,near:1,far:460});
+sun.shadow.bias=-.0007; sun.shadow.normalBias=.03;
+sun.shadow.autoUpdate=false;                 // 由畫質設定決定幾幀更新一次
+const sunOff=new THREE.Vector3(90,150,60);
 scene.add(sun); scene.add(sun.target);
 const fillLight=new THREE.DirectionalLight(0xbcd4ff,.2); fillLight.position.set(-70,60,-50); scene.add(fillLight);
 const muzzleLight=new THREE.PointLight(0xffc070,0,16); scene.add(muzzleLight);
@@ -734,7 +748,7 @@ function addCollider(c){ colliders.push(c); for(let gz=gi(c.minZ);gz<=gi(c.maxZ)
 function addBox(x,y,z,w,h,d,color,o){
   o=o||{}; let m=null;
   if(!o.invisible){ m=new THREE.Mesh(boxGeo,o.mat||mat(color,o)); m.scale.set(w,h,d); m.position.set(x,y+h/2,z); m.userData.st=1; worldRoot.add(m); }
-  if(!o.nocollide) addCollider({minX:x-w/2,maxX:x+w/2,minY:y,maxY:y+h,minZ:z-d/2,maxZ:z+d/2,noRay:!!o.noRay,kind:o.kind||''});
+  if(!o.nocollide) addCollider({minX:x-w/2,maxX:x+w/2,minY:y,maxY:y+h,minZ:z-d/2,maxZ:z+d/2,noRay:!!o.noRay,kind:o.kind||'',vis:!o.invisible});
   return m;
 }
 function addMesh(geo,color,x,y,z,sx,sy,sz,ry,o){ const m=new THREE.Mesh(geo,(o&&o.mat)||mat(color,o||{})); m.scale.set(sx,sy,sz); m.position.set(x,y,z); if(ry) m.rotation.y=ry; m.userData.st=1; worldRoot.add(m); return m; }
@@ -929,11 +943,13 @@ function car(cx,cz){ const along=srand()<.5, c=spick([0x7b4a33,0x5f6a6e,0x8a7a3a
 }
 const barrelGeo=new THREE.CylinderGeometry(.34,.34,.95,10);
 function barrels(cx,cz){ const n=2+Math.floor(srand()*4);
-  for(let i=0;i<n;i++){ const x=cx+srnd(-1.4,1.4), z=cz+srnd(-1.4,1.4); addMesh(barrelGeo,spick([0x8a2f25,0x2f4f7a,0x4f5a33]),x,.475,z,1,1,1); addBox(x,0,z,.68,.95,.68,0,{invisible:true}); } }
+  for(let i=0;i<n;i++){ const x=cx+srnd(-1.4,1.4), z=cz+srnd(-1.4,1.4); addMesh(barrelGeo,spick([0x8a2f25,0x2f4f7a,0x4f5a33]),x,.475,z,1,1,1); addBox(x,0,z,.48,.95,.48,0,{invisible:true}); } }
 const rockGeo=new THREE.DodecahedronGeometry(1,0);
-function rock(x,z){ const s=srnd(1,2.6), h=srnd(.9,2.3);
-  addMesh(rockGeo,spick([0x8a8b86,0x7a7c78,0x9a978e]),x,h*.45,z,s,h,s*srnd(.8,1.2),srand()*6);
-  addBox(x,0,z,s*1.3,h*1.25,s*1.3,0,{invisible:true}); }
+function rock(x,z){ const s=srnd(1,2.6), h=srnd(.9,2.3), sz=s*srnd(.8,1.2);
+  addMesh(rockGeo,spick([0x8a8b86,0x7a7c78,0x9a978e]),x,h*.45,z,s,h,sz,srand()*6);
+  // 十二面體內切半徑是外接的 .794 倍；方盒的角要落在那個圓內，否則角會戳出石頭外 = 空氣牆
+  const w=Math.min(s,sz)*.794*Math.SQRT2;
+  addBox(x,0,z,w,h*1.2,w,0,{invisible:true}); }
 const trunkM=0x5b4330, leafCols=[0x3f6b32,0x4b7a38,0x36602e,0x557f3c];
 const coneG=new THREE.ConeGeometry(1,1,7);
 function tree(x,z){ const h=srnd(2.5,4);
@@ -1545,10 +1561,11 @@ function buildMap(id,sizeMul){
   scene.background.setHex(m.fogC); scene.fog.color.setHex(m.fogC); scene.fog.near=m.fog[0]; scene.fog.far=m.fog[1];
   groundMat.map=m.tex||null; groundMat.color.setHex(m.gcolor||0xffffff); groundMat.needsUpdate=true;
   hemi.color.setHex(m.hemi[0]); hemi.groundColor.setHex(m.hemi[1]); hemi.intensity=m.hemi[2];
-  sun.color.setHex(m.sun[0]); sun.intensity=m.sun[1]; sun.position.set(m.sun[2][0],m.sun[2][1],m.sun[2][2]);
-  const ext=MAP+20;
-  Object.assign(sun.shadow.camera,{left:-ext,right:ext,top:ext,bottom:-ext,near:10,far:ext*4});
+  sun.color.setHex(m.sun[0]); sun.intensity=m.sun[1];
+  sunOff.set(m.sun[2][0],m.sun[2][1],m.sun[2][2]).normalize().multiplyScalar(170);
+  sun.position.copy(sunOff);
   sun.shadow.camera.updateProjectionMatrix();
+  sun.shadow.needsUpdate=true;
   m.build();
   if(m.base&&MAP>m.base*1.05) fillOutskirts(m.base);
   boundary(m.fence,m.id==='tech'?2.2:1.2);
@@ -1959,10 +1976,42 @@ const R_PLAYER=.38;
 let curW=-1, reloadT=0, pickTarget=null, shotT=0, switchT=0, adsT=0, aiming=false, mouseDown=false, firedThisClick=false, bloom=0, kick=0, bobT=0, stepT=0, swayX=0, swayY=0, hurtT=0, deathT=0, flashT=0;
 const stats={shots:0,hits:0,heads:0,kills:0,teamKills:0,time:0};
 const keys={};
-let sens=1;
+let sens=1, baseFov=75, quality='mid', shadowEvery=2, shadowTick=0;
+try{ const f=parseFloat(localStorage.getItem('fps_fov')); if(f>=60&&f<=110) baseFov=f; }catch(e){}
+try{ const q=localStorage.getItem('fps_q'); if(q==='high'||q==='mid'||q==='low') quality=q; }catch(e){}
+function applyQuality(q){
+  quality=q;
+  const on=q!=='low';
+  shadowEvery=q==='high'?1:2;
+  if(renderer.shadowMap.enabled!==on){
+    renderer.shadowMap.enabled=on;
+    scene.traverse(o=>{ if(o.material){ const ms=Array.isArray(o.material)?o.material:[o.material]; for(const mm of ms) mm.needsUpdate=true; } });
+  }
+  sun.castShadow=on;
+  renderer.setPixelRatio(q==='high'?Math.min(window.devicePixelRatio||1,1.6):1);
+  renderer.setSize(innerWidth,innerHeight);
+  sun.shadow.needsUpdate=true;
+  try{ localStorage.setItem('fps_q',q); }catch(e){}
+  const seg=$('qual'); if(seg) [...seg.children].forEach(b=>b.classList.toggle('on',b.dataset.q===q));
+}
+// 把太陽與陰影框釘在玩家身上，並對齊貼圖格避免陰影邊緣抖動
+function followShadow(){
+  if(!sun.castShadow) return;
+  const texel=2*SHADOW_HALF/SHADOW_MAP;
+  const cx=Math.round(camera.position.x/texel)*texel, cz=Math.round(camera.position.z/texel)*texel;
+  sun.target.position.set(cx,0,cz); sun.target.updateMatrixWorld();
+  sun.position.set(cx+sunOff.x,sunOff.y,cz+sunOff.z);
+  shadowTick++;
+  if(shadowTick>=shadowEvery){ shadowTick=0; sun.shadow.needsUpdate=true; }
+}
 try{ const s=parseFloat(localStorage.getItem('fps_sens')); if(s>0){ sens=s; $('sens').value=s; } }catch(e){}
 $('sensV').textContent=sens.toFixed(1);
 $('sens').addEventListener('input',e=>{ sens=parseFloat(e.target.value); $('sensV').textContent=sens.toFixed(1); try{ localStorage.setItem('fps_sens',sens);}catch(err){} });
+$('fov').value=baseFov; $('fovV').textContent=baseFov;
+$('fov').addEventListener('input',e=>{ baseFov=parseFloat(e.target.value); $('fovV').textContent=baseFov;
+  if(!aiming){ camera.fov=baseFov; camera.updateProjectionMatrix(); }
+  try{ localStorage.setItem('fps_fov',baseFov);}catch(err){} });
+$('qual').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; clickBeep(); applyQuality(b.dataset.q); });
 
 function switchWeapon(i){
   if(i===curW||i<0||i>=WEAPONS.length||!WEAPONS[i].have) return;
@@ -2251,7 +2300,7 @@ class Bot{
     this.dropping=false; this.jumped=false; this.chuteOpen=false; this.chute=null; this.dvx=0; this.dvz=0; this.jumpAt=0; this.land=new THREE.Vector3();
     this.gun=null; this.mag=0; this.res=0; this.reloadT=0; this.lootP=null; this.lootT=0; this.respawnT=0; this.ladder=0; this.ladderKills=0;
     this.combatMode='strafe'; this.modeT=0; this.holdCrouch=false;
-    this.net=false; this.nid=null; this.owner=0; this.np=null; this.netAim=false;
+    this.net=false; this.nid=null; this.owner=0; this.np=null; this.np0=null; this.np1=null; this.netAim=false;
     this.path=null; this.pathI=0; this.pathT=0; this.pathGoal=null;
     this.noProgT=0; this.forgetT=22; this.badLoot=new Set(); this.blocked=false; this.pathFail=false; this.huntT=0; this.wander=null;
     this.ft=idx%3; this.lane=[-1,1,0][this.ft]; this.aggroPick=idx%3; this.prey=null; this.preyT=0; this.laneT=rand(10,20);
@@ -2281,13 +2330,18 @@ class Bot{
   head(){ return new THREE.Vector3(this.pos.x,this.pos.y+1.6,this.pos.z); }
   // a remote player / remote bot: smooth toward the last state we were sent, animate from its speed
   netUpdate(dt){
-    const n=this.np;
-    if(n){
-      const k=Math.min(1,dt*12);
-      this.pos.x+=(n.x-this.pos.x)*k; this.pos.y+=(n.y-this.pos.y)*k; this.pos.z+=(n.z-this.pos.z)*k;
-      this.yaw=turnToward(this.yaw,n.yaw,dt*10);
-      this.curSpd=n.spd||0;
-    }
+    // 在「現在 - NETDELAY」這個時間點播放，兩筆快照之間線性內插：
+    // 封包到得不平均也不會抖，代價是畫面比對方實際位置慢 NETDELAY 秒
+    const a=this.np0, b=this.np1;
+    if(a&&b){
+      const rt=performance.now()/1000-NETDELAY, span=b.t-a.t;
+      let k=span>1e-4?(rt-a.t)/span:1;
+      k=k<0?0:k>1.3?1.3:k;                       // 封包遲到時容許一點點外推
+      this.pos.set(a.x+(b.x-a.x)*k, a.y+(b.y-a.y)*k, a.z+(b.z-a.z)*k);
+      let dy=b.yaw-a.yaw; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2;
+      this.yaw=a.yaw+dy*k;
+      this.curSpd=b.spd||0;
+    } else if(b){ this.pos.set(b.x,b.y,b.z); this.yaw=b.yaw; this.curSpd=b.spd||0; }
     const g=this.group;
     if(!this.alive){
       if(this.fall<1){ this.fall=Math.min(1,this.fall+dt*2.6); const e=1-Math.pow(1-this.fall,3); g.rotation.x=-Math.PI/2*e; }
@@ -3417,7 +3471,7 @@ function checkModeEnd(dt){
 
 /* ================= Game state ================= */
 const inGame=()=>state==='playing'||state==='drop';
-let state='menu', paused=false, locked=false, lockWorked=false, noLock=false, spectate=false, specBot=null;
+let state='menu', paused=false, uiPause=false, locked=false, lockWorked=false, noLock=false, spectate=false, specBot=null;
 function freeSpotNear(cx,cz,r){
   for(let i=0;i<200;i++){ const rr=r+i*.15, a=Math.random()*Math.PI*2, d=Math.sqrt(Math.random())*rr;
     const x=clamp(cx+Math.cos(a)*d,-MAP+5,MAP-5), z=clamp(cz+Math.sin(a)*d,-MAP+5,MAP-5);
@@ -3514,10 +3568,20 @@ document.addEventListener('pointerlockchange',()=>{ locked=document.pointerLockE
   if(locked){ lockWorked=true; noLock=false; if(paused) resume(); }
   else if(inGame()&&!paused) pause(); });
 document.addEventListener('pointerlockerror',lockFailed);
-function pause(){ if(bagOpen) return; if(!inGame()) return;
-  if(NET.on&&NET.inMatch){ toast('連線對戰不能暫停，按 Esc 可放開滑鼠',1800); return; }
-  paused=true; mouseDown=false; aiming=false; $('pause').hidden=false; $('pauseHint').textContent='點「繼續」回到戰場'; }
-function resume(){ paused=false; $('pause').hidden=true; last=performance.now(); }
+function pause(){
+  if(bagOpen) return; if(!inGame()) return;
+  mouseDown=false; aiming=false;
+  for(const k in keys) keys[k]=false;
+  $('pause').hidden=false;
+  if(NET.on&&NET.inMatch){                      // 連線時世界不會停，只是把選單疊上來
+    uiPause=true;
+    $('pauseHint').textContent='連線對戰不會暫停，你站在原地還是會被打';
+    if(document.pointerLockElement) document.exitPointerLock();
+    return;
+  }
+  paused=true; $('pauseHint').textContent='點「繼續」回到戰場';
+}
+function resume(){ paused=false; uiPause=false; $('pause').hidden=true; last=performance.now(); }
 let killCam=null, introT=0, introFrom=new THREE.Vector3();
 function introSting(){
   initAudio();
@@ -3588,7 +3652,9 @@ function endGame(win){
   $('sKills').textContent=stats.kills; $('sTeamK').textContent=stats.teamKills; $('sAcc').textContent=(stats.shots?Math.round(stats.hits/stats.shots*100):0)+'%'; $('sTime').textContent=fmt(stats.time);
   $('end').hidden=false; $('hud').hidden=true; $('scope').hidden=true;
 }
-function toMenu(){ if(NET.on){ NET.inMatch=false; NETROSTER=null; } state='menu'; paused=false; spectate=false; $('end').hidden=true; $('pause').hidden=true; $('hud').hidden=true; $('menu').hidden=false; showScreen('setup'); if(document.pointerLockElement) document.exitPointerLock(); WEAPONS.forEach(w=>w.model.visible=false); }
+function toMenu(){ if(NET.on){ NET.inMatch=false; NETROSTER=null; } uiPause=false; state='menu'; paused=false; spectate=false; $('end').hidden=true; $('pause').hidden=true; $('hud').hidden=true; $('menu').hidden=false;
+  if(NET.on){ showScreen('net'); netRoomUI(); } else showScreen('setup');
+  if(document.pointerLockElement) document.exitPointerLock(); WEAPONS.forEach(w=>w.model.visible=false); }
 
 $('diff').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; D=DIFF[b.dataset.d]; diffKey=b.dataset.d; [...$('diff').children].forEach(x=>x.classList.toggle('on',x===b)); });
 
@@ -3596,6 +3662,14 @@ $('diff').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!
 /* ================= 連線對戰（房主權威 + 薄中繼） =================
    伺服器只轉送訊息。房主跑 AI、縮圈、計分並廣播快照；
    每位玩家自己管自己的 HP 與位置，命中由開槍者判定後送給對方。 */
+const NETDELAY=.12;                              // 緩衝 120ms：兩筆快照的空檔都蓋得住
+function netPush(ent,x,y,z,yaw,spd){
+  const t=performance.now()/1000;
+  if(ent.np1&&t-ent.np1.t<.004) return;          // 同一刻的重複封包丟掉
+  ent.np0=ent.np1||{x,y,z,yaw,spd,t:t-.055};
+  ent.np1={x,y,z,yaw,spd,t};
+  ent.np=ent.np1;
+}
 const NET={on:false,ws:null,id:0,hostId:0,code:'',name:'',myTeam:0,peers:new Map(),
   ents:new Map(),inMatch:false,sendT:0,snapT:0,pendTeams:2,pendPer:4,side:'same',endSent:false,
   lastX:0,lastZ:0,spd:0};
@@ -3666,8 +3740,13 @@ function netMsg(m){
     case 'st': netApplyState(m); break;
     case 'sh': netApplyShot(m); break;
     case 'dmg': netApplyDamage(m); break;
-    case 'died': netApplyDied(m); break;
-    case 'kf': feed(`<span class="en">${m.k}</span> 擊倒了 <span class="en">${m.v}</span>`); break;
+    case 'died':
+      if(m.by===('h'+NET.id)) netCreditKill(netNameOf(m.from),false);   // 我打死的：算我的
+      netApplyDied(m); break;
+    case 'kill': netCreditKill(m.v||'對手',!!m.hd); break;
+    case 'kf':
+      if(m.by===NET.id||m.vi===NET.id) break;        // 當事人自己已經播過了
+      feed(`<span class="en">${m.k}</span> 擊倒了 <span class="en">${m.v}</span>`); break;
     case 'end': if(!netHost()&&NET.inMatch){ NET.inMatch=false; endGame(lt(m.w)===0); } break;
   }
 }
@@ -3716,7 +3795,8 @@ function netBuildLineup(){
     b.nid=e.h?('h'+e.h):('b'+e.s);
     b.owner=e.h||NET.hostId;
     if(e.h||!netHost()){                       // 別人的角色：不跑 AI，只跟著網路狀態走
-      b.net=true; b.np={x:e.x,y:0,z:e.z,yaw:b.yaw,spd:0}; b.gun=WBY('rifle');
+      b.net=true; b.gun=WBY('rifle');
+      b.np1={x:e.x,y:0,z:e.z,yaw:b.yaw,spd:0,t:performance.now()/1000}; b.np0=b.np1; b.np=b.np1;
       if(!e.h) b.netAim=false;
     }
     bots.push(b); NET.ents.set(b.nid,b);
@@ -3767,7 +3847,7 @@ function netApplySnap(m){
   }
   for(const e of m.b){
     const ent=NET.ents.get('b'+e[0]); if(!ent) continue;
-    ent.np={x:e[1],y:e[2],z:e[3],yaw:e[4],spd:e[7]};
+    netPush(ent,e[1],e[2],e[3],e[4],e[7]);
     ent.hp=e[5]; const fl=e[6];
     ent.crouch=!!(fl&4); ent.netAim=!!(fl&8); ent.down=!!(fl&2);
     if(!!(fl&1)!==ent.alive) netSetAlive(ent,!!(fl&1));
@@ -3775,7 +3855,7 @@ function netApplySnap(m){
 }
 function netApplyState(m){
   const ent=NET.ents.get('h'+m.from); if(!ent) return;
-  ent.np={x:m.x,y:m.y,z:m.z,yaw:m.yaw,spd:m.spd};
+  netPush(ent,m.x,m.y,m.z,m.yaw,m.spd);
   ent.crouch=!!(m.fl&4); ent.netAim=!!(m.fl&8); ent.down=!!(m.fl&2);
   if(!!(m.fl&1)!==ent.alive) netSetAlive(ent,!!(m.fl&1));
 }
@@ -3805,11 +3885,18 @@ function netApplyDamage(m){
     const ent=NET.ents.get(m.n);
     if(ent&&!ent.net&&ent.alive){
       if(ent.damage(m.d,!!m.hd,src||P)){
-        netSend({t:'kf',k:src?src.name:'玩家',v:ent.name});
-        if(src) teamScore[src.team]=(teamScore[src.team]||0)+1;
+        netSend({t:'kf',k:src?src.name:'玩家',v:ent.name,by:m.from,vi:0});
+        netSend({t:'kill',to:m.from,v:ent.name,hd:m.hd});   // 告訴開槍的人：這隻是你殺的
+        if(src){ teamScore[src.team]=(teamScore[src.team]||0)+1; ladderKill(src); }
       }
     }
   }
+}
+function netCreditKill(name,head){
+  stats.kills++; if(head) stats.heads++;
+  showHit(true,head);
+  feed(`<span class="tm">你</span> 擊倒了 <span class="en">${name}</span>${head?'<em>爆頭</em>':''}`,'me');
+  updateCounts();
 }
 function netApplyDied(m){
   if(!netHost()) return;
@@ -3817,7 +3904,8 @@ function netApplyDied(m){
   const killer=m.by?NET.ents.get(m.by):null;
   const kTeam=m.by===('h'+NET.id)?0:(killer?killer.team:null);
   if(kTeam!=null){ teamScore[kTeam]=(teamScore[kTeam]||0)+1; ladderKill(m.by===('h'+NET.id)?P:killer); }
-  netSend({t:'kf',k:m.by===('h'+NET.id)?NET.name:(killer?killer.name:'安全區'),v:victim?victim.name:'玩家'});
+  const killerId=(m.by&&m.by[0]==='h')?parseInt(m.by.slice(1)):0;
+  netSend({t:'kf',k:m.by===('h'+NET.id)?NET.name:(killer?killer.name:'安全區'),v:victim?victim.name:netNameOf(m.from),by:killerId,vi:m.from});
 }
 function hitEntity(b,dmg,head){
   if(NET.on&&b.net){ netSend({t:'dmg',to:b.owner,n:b.nid,d:+dmg.toFixed(1),hd:head?1:0}); return false; }
@@ -4028,11 +4116,12 @@ $('netGo').addEventListener('click',()=>{ clickBeep(); showScreen('mode'); });
 $('netSide').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
   NET.side=b.dataset.v; [...$('netSide').children].forEach(x=>x.classList.toggle('on',x===b)); clickBeep(); });
 $('quitBtn').addEventListener('click',toMenu);
-$('resumeBtn').addEventListener('click',()=>{ initAudio(); if(noLock) resume(); else requestLock(); });
-canvas.addEventListener('click',()=>{ if(inGame()&&!locked&&!noLock&&!paused) requestLock(); });
+$('resumeBtn').addEventListener('click',()=>{ initAudio(); uiPause=false; $('pause').hidden=true; if(noLock) resume(); else { paused=false; last=performance.now(); requestLock(); } });
+canvas.addEventListener('click',()=>{ if(inGame()&&!locked&&!noLock&&!paused&&!uiPause) requestLock(); });
 
 /* ================= Input ================= */
 addEventListener('keydown',e=>{
+  if(uiPause&&e.code!=='KeyP'&&e.code!=='Escape') return;
   keys[e.code]=true;
   if(!inGame()) return;
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
@@ -4050,18 +4139,21 @@ addEventListener('keydown',e=>{
 addEventListener('keyup',e=>{ keys[e.code]=false; });
 addEventListener('blur',()=>{ for(const k in keys) keys[k]=false; mouseDown=false; aiming=false; });
 document.addEventListener('mousemove',e=>{
-  if(!inGame()||paused||!P.alive) return; if(!locked&&!noLock) return;
-  const s=.0022*sens*(camera.fov/75); P.yaw-=e.movementX*s; P.pitch=clamp(P.pitch-e.movementY*s,-1.52,1.52); swayX+=e.movementX; swayY+=e.movementY;
+  if(!inGame()||paused||uiPause||!P.alive) return; if(!locked&&!noLock) return;
+  const s=.0022*sens*(camera.fov/baseFov); P.yaw-=e.movementX*s; P.pitch=clamp(P.pitch-e.movementY*s,-1.52,1.52); swayX+=e.movementX; swayY+=e.movementY;
 });
-canvas.addEventListener('mousedown',e=>{ if(!inGame()||paused||!P.alive) return; if(!locked&&!noLock) return; if(e.button===0){ mouseDown=true; firedThisClick=false; } if(e.button===2) aiming=true; });
+canvas.addEventListener('mousedown',e=>{ if(!inGame()||paused||uiPause||!P.alive) return; if(!locked&&!noLock) return; if(e.button===0){ mouseDown=true; firedThisClick=false; } if(e.button===2) aiming=true; });
 addEventListener('mouseup',e=>{ if(e.button===0) mouseDown=false; if(e.button===2) aiming=false; });
 addEventListener('contextmenu',e=>{ if(inGame()) e.preventDefault(); });
 addEventListener('wheel',e=>{ if(!inGame()||paused) return; nextOwned(e.deltaY>0?1:-1); },{passive:true});
-document.addEventListener('visibilitychange',()=>{ if(document.hidden&&inGame()&&!paused&&!(NET.on&&NET.inMatch)) pause(); });
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden&&inGame()&&!paused&&!(NET.on&&NET.inMatch)) pause();
+  if(!document.hidden&&NET.on&&NET.inMatch&&netHost()) toast('你剛剛切走了，房主切走時整場會變慢',2600);
+});
 
 /* ================= Update ================= */
 function updatePlayer(dt){
-  if(!P.alive) return;
+  if(!P.alive||uiPause) return;
   if(introT>0){ P.vel.set(0,0,0); return; }
   stats.time+=dt;
   if(P.vault){ updateVault(P,dt); P.eyeH+=((P.crouch?1.12:1.65)-P.eyeH)*Math.min(1,dt*12); return; }
@@ -4118,7 +4210,7 @@ function updateWeapon(dt){
     adsT+=(0-adsT)*Math.min(1,dt*14);
     WEAPONS.forEach(x=>x.model.visible=false);
     $('scope').hidden=true; $('reddot').hidden=true;
-    const fv=75+(50-75)*adsT; if(Math.abs(camera.fov-fv)>.01){ camera.fov=fv; camera.updateProjectionMatrix(); }
+    const fv=baseFov+(50-baseFov)*adsT; if(Math.abs(camera.fov-fv)>.01){ camera.fov=fv; camera.updateProjectionMatrix(); }
     $('xhair').style.opacity=(!w&&P.alive&&!air)?.45:0;
     return;
   }
@@ -4128,7 +4220,7 @@ function updateWeapon(dt){
   if(flashT>0){ flashT-=dt; if(flashT<=0){ w.flash.visible=false; } }
   muzzleLight.intensity=Math.max(0,muzzleLight.intensity-dt*40);
   const mag=opticOf(w), opticFov=w.melee?70:opticFovOf(w);
-  const targetFov=75+(opticFov-75)*adsT; if(Math.abs(camera.fov-targetFov)>.01){ camera.fov=targetFov; camera.updateProjectionMatrix(); }
+  const targetFov=baseFov+(opticFov-baseFov)*adsT; if(Math.abs(camera.fov-targetFov)>.01){ camera.fov=targetFov; camera.updateProjectionMatrix(); }
   const vmFov=62+22*adsT;                 // keeps the optic small instead of swallowing the screen
   if(Math.abs(vmCam.fov-vmFov)>.01){ vmCam.fov=vmFov; vmCam.updateProjectionMatrix(); }
   const magnified=mag>=2;
@@ -4259,7 +4351,11 @@ let last=performance.now(), menuT=0;
 function render(showVM){ renderer.clear(); renderer.render(scene,camera); if(showVM){ renderer.clearDepth(); renderer.render(vmScene,vmCam); } }
 function frame(now){
   requestAnimationFrame(frame);
-  const dt=Math.min(Math.max((now-last)/1000,0),.05); last=now;
+  const raw=Math.max((now-last)/1000,0); last=now;
+  const dt=Math.min(raw,.05);
+  // 房主切到別的分頁時瀏覽器會把畫面降到每秒 1~3 幀，整場比賽都會跟著慢下來。
+  // 房主補跑幾步模擬把時間追回來（最多補 5 步 = 0.25 秒／幀）。
+  const catchUp=(NET.on&&NET.inMatch&&netHost()&&raw>.06)?Math.min(5,Math.floor(raw/.05)-1):0;
   zoneMesh.visible=state!=='menu'&&MODE.zone;
   skyDome.position.set(camera.position.x,0,camera.position.z);   // horizon must not slide as you walk
   if(state==='menu'){ menuT+=dt*.04; camera.fov=70; camera.updateProjectionMatrix(); camera.position.set(Math.cos(menuT)*MAP*.8,MAP*.38,Math.sin(menuT)*MAP*.8); camera.lookAt(0,MAP*.05,0); updateFx(dt); render(false); return; }
@@ -4284,13 +4380,18 @@ function frame(now){
       if(MODE.zone&&sim) updateZone(dt);
       if(sim) updateDrops(dt);
       if(sim) checkModeEnd(dt);
-      else if(NET.on&&MODE.respawn&&state==='playing') stats.time+=0;
+      for(let k=0;k<catchUp&&state==='playing';k++){
+        for(const b of bots) if(!b.net) b.update(.05);
+        if(MODE.zone) updateZone(.05);
+        updateDrops(.05); checkModeEnd(.05);
+      }
     }
     else for(const b of bots) b.update(dt);
     updateFx(dt);
   }
   netTick(dt);
   placeCamera(dt);
+  followShadow();
   updateListener();
   if(!paused) updateWeapon(dt);
   updateHUD(dt);
@@ -4299,7 +4400,7 @@ function frame(now){
 MODE=MODES[0];
 buildMap(SET.map,modeSize());
 builtKey=SET.map+'|'+modeSize();
-buildSetup(); showScreen('home');
+buildSetup(); showScreen('home'); applyQuality(quality);
 resetZone();
 // optional dev hook: open the page with #dev to poke at the match from the console
 if(typeof location!=='undefined'&&location.hash==='#dev') window.__dev={
@@ -4311,6 +4412,8 @@ if(typeof location!=='undefined'&&location.hash==='#dev') window.__dev={
   get NET(){return NET}, get roster(){return NETROSTER}, get ents(){return [...NET.ents.keys()]},
   shoot(){ const w=WEAPONS[curW]; if(!w||w.fists){ const r=WBY('rifle'); giveWeapon(r,true); switchWeapon(WEAPONS.indexOf(r)); } shotT=0; fire(); return WEAPONS[curW].name; },
   hitFirst(d){ const e=[...NET.ents.values()][0]; if(!e) return 'none'; hitEntity(e,d||40,false); return e.nid; },
+  hit(nid,d){ const e=NET.ents.get(nid); if(!e) return 'no ent '+nid; hitEntity(e,d||40,false); return e.nid+' hp='+Math.round(e.hp); },
+  get stats(){ return stats; }, killN(){ return $('killN').textContent; },
   faceFirst(){ const e=[...NET.ents.values()][0]; if(!e) return 'none'; P.pos.set(e.pos.x,e.pos.y,e.pos.z+3.2); P.yaw=Math.atan2(-(e.pos.x-P.pos.x),-(e.pos.z-P.pos.z)); P.pitch=-.03; return e.name; },
   get score(){return teamScore}, get mt(){return matchT},
   state:()=>state, map:()=>curMap.id,
