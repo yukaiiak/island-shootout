@@ -1,4 +1,4 @@
-<title>荒島槍戰</title>
+<title>致命屎尿戰</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Noto+Sans+TC:wght@400;700;900&display=swap">
@@ -6,7 +6,7 @@
 /* Layout: full-bleed 3D view; HUD pinned to the four corners; menus are centered tactical panels over the live map */
 :root{
   --ink:#0d1316; --panel:rgba(12,18,21,.82); --line:rgba(214,226,220,.16);
-  --fg:#e7efea; --dim:#9db0a7; --accent:#ffb000; --danger:#ff4b3e; --heal:#56d97a; --armor:#5ab8ff; --zone:#3d8bff; --team:#3fe0c5;
+  --fg:#e7efea; --dim:#9db0a7; --accent:#d9a227; --danger:#ff4b3e; --heal:#56d97a; --armor:#5ab8ff; --zone:#3d8bff; --team:#3fe0c5;
   --font-display:"Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif;
   --font-hud:"Chakra Petch","Noto Sans TC","Microsoft JhengHei",ui-monospace,monospace;
   color-scheme:dark;
@@ -347,6 +347,21 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   border:1px solid var(--line);border-radius:8px;padding:7px 13px;cursor:pointer}
 .copybtn:hover{border-color:rgba(255,176,0,.55);color:#ffd98a}
 .copybtn.done{border-color:var(--heal);color:var(--heal)}
+
+/* ---------- 角色選擇 ---------- */
+.chargrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:9px;margin:4px 0 12px}
+.charcard{position:relative;display:flex;flex-direction:column;gap:3px;padding:11px 12px 12px;text-align:left;cursor:pointer;
+  border:1px solid var(--glassline);border-radius:var(--r-md);background:var(--glass);backdrop-filter:blur(9px);
+  color:var(--fg);font-family:var(--font-display);transition:transform .12s,border-color .12s,background .12s}
+.charcard:hover{transform:translateY(-2px);border-color:rgba(217,162,39,.55)}
+.charcard.on{border-color:var(--accent);background:linear-gradient(165deg,rgba(217,162,39,.2),rgba(217,162,39,.05));box-shadow:var(--sh-1)}
+.charcard .emo{font-size:26px;line-height:1}
+.charcard b{font:800 15px var(--font-display);letter-spacing:.3px}
+.charcard .ct{font:600 11px var(--font-display);color:var(--dim)}
+.charcard .cg,.charcard .cb{display:flex;gap:5px;font:600 11.5px var(--font-display);line-height:1.35}
+.charcard .cg{color:#8ee6a4}.charcard .cb{color:#ff9a86}
+.charcard .cg s,.charcard .cb s{text-decoration:none;flex:0 0 auto;opacity:.85}
+.charcard .hpn{position:absolute;top:9px;right:11px;font:800 11px var(--font-hud);color:var(--accent);opacity:.9}
 </style>
 
 <div id="game"></div>
@@ -414,9 +429,9 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 <div id="menu" class="overlay">
   <div class="card">
     <div id="scrHome" class="home">
-      <div class="eyebrow">FPS · 5 種玩法 · 最多 100 人</div>
-      <h1 class="bigtitle">荒島<span>槍戰</span></h1>
-      <p class="tag">跳傘吃雞、團隊死鬥、單挑、軍備競賽、狙擊賽。八張地圖，最多百人同場。</p>
+      <div class="eyebrow">屎尿 FPS · 7 種角色 · 5 種玩法</div>
+      <h1 class="bigtitle">致命<span>屎尿戰</span></h1>
+      <p class="tag">噴屎、射尿、馬桶蓋爆頭。七種角色各有一個超強專長跟一個要命的毛病，八張地圖，最多百人同場。</p>
       <div class="cta">
         <button class="btn" id="goModes">開始遊戲</button>
         <button class="btn ghost" id="goHelp">操作說明</button>
@@ -455,6 +470,9 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       <div class="eyebrow">Step 3 / 3 · <span id="seatMode"></span></div>
       <h1 style="font-size:clamp(26px,5vw,42px)">選擇席位</h1>
       <p class="tag" id="seatTag"></p>
+      <h3 style="margin-top:2px">你的角色</h3>
+      <div class="chargrid" id="charsSeat"></div>
+      <h3>席位</h3>
       <div class="seatgrid" id="seatGrid"></div>
       <p class="note" id="seatHint"></p>
       <div class="cta">
@@ -482,6 +500,9 @@ input[type=range]{width:100%;accent-color:var(--accent)}
           <button data-d="hard">困難<small>敵人槍法準</small></button>
         </div>
       </div>
+      <h3>選角色</h3>
+      <p class="note" style="margin:0 0 7px">每個角色都有一個超強的專長，和一個很要命的毛病。</p>
+      <div class="chargrid" id="chars"></div>
       <div id="modeOpts"></div>
       <p class="rules" id="lineup"></p>
       <div class="cta">
@@ -506,14 +527,14 @@ input[type=range]{width:100%;accent-color:var(--accent)}
         </dl>
         <dl class="keys">
           <dt>F</dt><dd>撿東西 · 扶起倒地的隊友</dd>
-          <dt>R</dt><dd>換彈匣</dd>
-          <dt>1 2 3 4</dt><dd>切換武器（沒槍時自動用拳頭）</dd>
+          <dt>R</dt><dd>換料桶</dd>
+          <dt>1 2 3 4</dt><dd>切換武器（沒槍時自動用糞拳）</dd>
           <dt>I / B</dt><dd>背包：拖曳更換倍鏡</dd>
           <dt>M / Tab</dt><dd>大地圖</dd>
           <dt>Esc</dt><dd>暫停（可調滑鼠靈敏度）</dd>
         </dl>
       </div>
-      <p class="rules" style="margin-top:14px">吃雞與狙擊賽：被打倒會先倒地，隊友可以救；空投裡有輕機槍與高倍鏡。</p>
+      <p class="rules" style="margin-top:14px">吃屎與狙擊賽：被打倒會先倒地，隊友可以救；空投裡有大腸機槍與高倍鏡。</p>
       <div class="cta"><button class="btn" id="backFromHelp">← 返回</button></div>
     </div>
   </div>
@@ -523,7 +544,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   <div class="bar top"></div><div class="bar bottom"></div>
   <div class="introbody">
     <div class="imode" id="introMode">團隊死鬥</div>
-    <div class="imap" id="introMap">競技場</div>
+    <div class="imap" id="introMap">馬桶競技場</div>
     <div class="irule" id="introRule"></div>
   </div>
 </div>
@@ -532,7 +553,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   <div class="card" style="width:min(760px,100%)">
     <div class="eyebrow">Backpack · I / B 關閉</div>
     <h1 style="font-size:clamp(26px,5vw,40px)">背包</h1>
-    <p class="tag">把倍鏡<b>拖</b>到槍上的方框就裝備，拖回下面的背包格就卸下（也可以用點的）。</p>
+    <p class="tag">把倍鏡<b>拖</b>到武器上的方框就裝備，拖回下面的背包格就卸下（也可以用點的）。</p>
     <h3>武器</h3>
     <div id="bagGuns" class="gunrow"></div>
     <h3 style="margin-top:16px">背包 · 配件</h3>
@@ -646,11 +667,16 @@ function initAudio(){
   addEventListener(ev,()=>{ initAudio(); if(actx&&actx.state!=='running'&&actx.resume) actx.resume(); },{capture:true}));
 // per-gun voicing: crack (transient), body (filtered noise), thump (low sweep), tail (reverb send)
 const SHOT={
+  // 屎類：悶、濕、低頻多；尿類：細、高頻嘶嘶聲
+  poop:   {crack:1900,body:560,bodyQ:1.6,dur:.22,low:95,lowDur:.14,g:.6,tail:.3},
+  splat:  {crack:1300,body:320,bodyQ:1.1,dur:.4,low:58,lowDur:.26,g:.9,tail:.5},
+  stream: {crack:7400,body:3100,bodyQ:3.2,dur:.52,low:190,lowDur:.1,g:.62,tail:.6},
+  squirt: {crack:7800,body:3600,bodyQ:3.6,dur:.14,low:260,lowDur:.05,g:.46,tail:.2},
   rifle:  {crack:5200,body:1500,bodyQ:1.1,dur:.16,low:150,lowDur:.1,g:.55,tail:.3},
   pistol: {crack:6200,body:2100,bodyQ:1.3,dur:.11,low:210,lowDur:.07,g:.44,tail:.22},
   shotgun:{crack:3600,body:780,bodyQ:.8,dur:.34,low:88,lowDur:.2,g:.85,tail:.45},
   sniper: {crack:4200,body:980,bodyQ:.7,dur:.5,low:66,lowDur:.34,g:.9,tail:.75},
-  enemy:  {crack:4400,body:1300,bodyQ:1,dur:.16,low:130,lowDur:.1,g:.5,tail:.35}
+  enemy:  {crack:2100,body:640,bodyQ:1.5,dur:.2,low:110,lowDur:.13,g:.55,tail:.35}
 };
 function playShot(type,vol,pan,at){
   if(!actx||!master) return; audioStats.shots++; if(at) audioStats.spatial++;
@@ -1706,36 +1732,36 @@ function extraCover(){
 }
 
 const MAPS=[
-  {id:'arena',crowd:'small',best:['tdm','duel','gun'],name:'競技場',sub:'對稱場地 · 死鬥專用',size:55,base:55,seed:4242,build:arenaLayout,
+  {id:'arena',crowd:'small',best:['tdm','duel','gun'],name:'馬桶競技場',sub:'對稱場地 · 死鬥專用',size:55,base:55,seed:4242,build:arenaLayout,
    tex:asphaltT,mm:'#54584f',fence:0xa9a195,fog:[70,300],fogC:0xc2cbd2,
    scenic:{rock:0x6a7368,grass:false,per:20,tracks:2,shade:{lush:[.93,.945,.955],dry:[1.07,1.055,1.04],dirt:[1.02,.98,.93]}},
    sky:['#6d9cc4','#b9cedd','#dfe0d8'],sun:[0xfff1dc,2.1,[70,140,50]],hemi:[0xe6f0ff,0x60655a,.45]},
-  {id:'island',crowd:'big',best:['br'],name:'荒島',sub:'開闊地形 · 房舍與丘陵',size:178,base:120,seed:1120,build:islandLayout,
+  {id:'island',crowd:'big',best:['br'],name:'糞島',sub:'開闊地形 · 房舍與丘陵',size:178,base:120,seed:1120,build:islandLayout,
    tex:grassT,mm:'#4f6b3a',fence:0x7d6a50,fog:[70,300],fogC:0xb4d3e6,
    scenic:{rock:0x66795a,per:26,rings:3},
    sky:['#6ea8d8','#b9d8ea','#dfe7df'],sun:[0xfff0d4,2.1,[90,150,60]],hemi:[0xe3f1ff,0x5d6b3c,.42]},
-  {id:'mansion',crowd:'small',best:['tdm','duel'],name:'豪宅',sub:'兩層大宅 · 泳池與庭園',size:132,base:80,seed:777,build:mansionLayout,
+  {id:'mansion',crowd:'small',best:['tdm','duel'],name:'污水大宅',sub:'兩層大宅 · 泳池與庭園',size:132,base:80,seed:777,build:mansionLayout,
    tex:lawnT,mm:'#56763f',fence:0xb9ad94,fog:[60,260],fogC:0xc3d6e2,
    scenic:{rock:0x6b7a5c,per:22,tracks:3},
    sky:['#7fb0d8','#c6dcea','#e6e2d6'],sun:[0xfff3dc,2.2,[70,130,50]],hemi:[0xe6f2ff,0x6a7b48,.45]},
-  {id:'park',crowd:'both',best:['snipe','br','gun'],name:'大公園',sub:'湖泊 · 樹林 · 涼亭',size:156,base:100,seed:2024,build:parkLayout,
+  {id:'park',crowd:'both',best:['snipe','br','gun'],name:'公廁公園',sub:'湖泊 · 樹林 · 涼亭',size:156,base:100,seed:2024,build:parkLayout,
    tex:lawnT,mm:'#4e7a3c',fence:0x6f6a52,fog:[80,320],fogC:0xbfd9e8,
    scenic:{rock:0x5f7a4e,per:24,tracks:4},
    sky:['#66a6dc','#bcd9ee','#e3ead9'],sun:[0xfff1d8,2.0,[60,140,80]],hemi:[0xe8f4ff,0x5f7a40,.46]},
-  {id:'palace',crowd:'both',best:['snipe','br'],name:'總統府',sub:'廣場 · 列柱 · 圓頂',size:148,base:95,seed:1945,build:palaceLayout,
+  {id:'palace',crowd:'both',best:['snipe','br'],name:'黃金宮',sub:'廣場 · 列柱 · 圓頂',size:148,base:95,seed:1945,build:palaceLayout,
    tex:groundTex((g,s)=>{ g.fillStyle='#9aa08f'; g.fillRect(0,0,s,s); for(let i=0;i<2600;i++){ g.fillStyle=Math.random()<.5?'rgba(130,138,120,.5)':'rgba(176,180,160,.45)'; const z=Math.random()*3+1; g.fillRect(Math.random()*s,Math.random()*s,z,z);} },80),
    mm:'#7c8370',fence:0xc8bda4,fog:[75,300],fogC:0xc8d8e0,
    scenic:{rock:0x767e68,per:22,grass:false,tracks:3,shade:{lush:[.93,.945,.955],dry:[1.07,1.055,1.04],dirt:[1.02,.98,.93]}},
    sky:['#5f9fd4','#bcd6e8','#e7e4d8'],sun:[0xfff2de,2.2,[80,150,40]],hemi:[0xe4f0ff,0x73765f,.45]},
-  {id:'office',crowd:'small',best:['tdm','duel','gun'],name:'辦公大樓',sub:'五層樓 + 頂樓直升機坪',size:120,base:70,seed:505,build:officeLayout,
+  {id:'office',crowd:'small',best:['tdm','duel','gun'],name:'便所大樓',sub:'五層樓 + 頂樓直升機坪',size:120,base:70,seed:505,build:officeLayout,
    tex:asphaltT,mm:'#4b4f53',fence:0x6d7276,fog:[60,260],fogC:0xb8c3cc,
    scenic:{rock:0x5c646a,slab:true,tall:true,grass:false,per:18,tracks:2,shade:{lush:[.93,.945,.955],dry:[1.07,1.055,1.04],dirt:[1.02,.98,.93]}},
    sky:['#5b8db5','#aec4d4','#d8dadb'],sun:[0xfff0dc,1.9,[60,160,70]],hemi:[0xdfeaf5,0x4e5358,.45]},
-  {id:'desert',crowd:'big',best:['snipe','br'],name:'沙漠',sub:'峽谷 · 沙丘 · 綠洲',size:190,base:125,seed:3030,build:desertLayout,
+  {id:'desert',crowd:'big',best:['snipe','br'],name:'乾屎沙漠',sub:'峽谷 · 沙丘 · 綠洲',size:190,base:125,seed:3030,build:desertLayout,
    tex:sandT,mm:'#b79a6c',fence:0xa98b63,fog:[90,380],fogC:0xe3cfa8,
    scenic:{rock:0xa98a5c,per:26,rings:3,tall:true,grass:false,tracks:5,shade:{lush:[.9,.87,.79],dry:[1.08,1.04,.93],dirt:[1.12,1.0,.82]}},
    sky:['#4f9fd6','#b8d4e2','#f0dcb4'],sun:[0xffe9bc,2.5,[110,140,30]],hemi:[0xf2e4c8,0xb09060,.5]},
-  {id:'tech',crowd:'big',best:['tdm','gun'],name:'科技世界',sub:'霓虹高塔 · 空中廊道',size:166,base:105,seed:8086,build:techLayout,
+  {id:'tech',crowd:'big',best:['tdm','gun'],name:'下水道科技城',sub:'霓虹高塔 · 空中廊道',size:166,base:105,seed:8086,build:techLayout,
    tex:gridT,mm:'#16202c',fence:0x2b3442,fog:[55,250],fogC:0x101826,
    scenic:{rock:0x1d2735,slab:true,tall:true,grass:false,per:22,rings:4,tracks:0,shade:{lush:[.82,.9,1.06],dry:[1.1,1.06,1.0],dirt:[.9,.95,1.04]}},
    sky:['#07080f','#16213a','#2b1f4a'],sun:[0x9fd8ff,1.0,[-80,120,-60]],hemi:[0x5a7fff,0x120f22,.3]},
@@ -1765,6 +1791,29 @@ function clearWorld(){
     worldRoot.remove(o);
   }
 }
+// 每張圖都灑一點主題道具：路邊馬桶、地上糞堆
+const propGeo={}, THEME_PROPS=[];
+function themeProps(){
+  if(!propGeo.lid){
+    propGeo.lid=new THREE.CylinderGeometry(.34,.34,.08,14);
+    propGeo.pile=new THREE.ConeGeometry(.5,.62,9);
+    propGeo.seat=new THREE.TorusGeometry(.25,.075,6,14);
+  }
+  THEME_PROPS.length=0;
+  const toilets=Math.round(4+MAP/18), piles=Math.round(10+MAP/8);
+  for(let i=0;i<toilets;i++) place(1.6,1.8,1.4,(x,z)=>{
+    THEME_PROPS.push([+x.toFixed(1),+z.toFixed(1)]);
+    addBox(x,0,z,.64,.62,.52,0xf3f0e7,{rough:.32});                       // 便座底座
+    addBox(x,0,z-.44,.6,1.02,.24,0xf3f0e7,{rough:.32});                   // 水箱
+    addMesh(propGeo.seat,0xeae5d8,x,.64,z,1,1,1,0,{nocollide:true,rough:.3});
+    addMesh(propGeo.lid,0xdcd6c6,x,.66,z-.3,1,1,1,0,{nocollide:true,rough:.3});
+    if(srand()<.6) addMesh(propGeo.pile,0x6d4722,x,.74,z,.42,.5,.42,srand()*6,{nocollide:true,rough:.95});
+  },40);
+  for(let i=0;i<piles;i++) place(1,1,.8,(x,z)=>{
+    const sc=srnd(.45,1.05);
+    addMesh(propGeo.pile,srand()<.5?0x6d4722:0x543515,x,sc*.28,z,sc,sc*.68,sc,srand()*6,{nocollide:true,rough:.95});
+  },30);
+}
 function buildMap(id,sizeMul){
   const m=MAPS.find(x=>x.id===id)||MAPS[0]; curMap=m;
   clearWorld();
@@ -1782,6 +1831,7 @@ function buildMap(id,sizeMul){
   sun.shadow.needsUpdate=true;
   m.build();
   if(m.base&&MAP>m.base*1.05) fillOutskirts(m.base);
+  themeProps();
   groundDetail(); horizonRange();
   boundary(m.fence,m.id==='tech'?2.2:1.2);
   if(MODE&&MODE.respawn&&MAP<58) extraCover();
@@ -2002,20 +2052,26 @@ function updateVault(e,dt){
 }
 
 /* ================= Effects ================= */
-const flashTex=new THREE.CanvasTexture(texCanvas(64,(g,s)=>{ const gr=g.createRadialGradient(32,32,0,32,32,32); gr.addColorStop(0,'rgba(255,255,230,1)'); gr.addColorStop(.25,'rgba(255,210,110,.95)'); gr.addColorStop(.6,'rgba(255,140,40,.35)'); gr.addColorStop(1,'rgba(255,120,20,0)'); g.fillStyle=gr; g.beginPath(); for(let i=0;i<16;i++){ const a=i/16*Math.PI*2, r=i%2?12:32; g.lineTo(32+Math.cos(a)*r,32+Math.sin(a)*r);} g.closePath(); g.fill(); }));
+const flashTex=new THREE.CanvasTexture(texCanvas(64,(g,s)=>{ const gr=g.createRadialGradient(32,32,0,32,32,32); gr.addColorStop(0,'rgba(255,248,205,1)'); gr.addColorStop(.25,'rgba(226,176,58,.95)'); gr.addColorStop(.62,'rgba(140,86,28,.4)'); gr.addColorStop(1,'rgba(104,64,20,0)'); g.fillStyle=gr; g.beginPath(); for(let i=0;i<16;i++){ const a=i/16*Math.PI*2, r=i%2?12:32; g.lineTo(32+Math.cos(a)*r,32+Math.sin(a)*r);} g.closePath(); g.fill(); }));
 flashTex.encoding=THREE.sRGBEncoding;
 const flashMat=new THREE.MeshBasicMaterial({map:flashTex,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,fog:false});
 const enemyFlashMat=new THREE.SpriteMaterial({map:flashTex,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false});
 
 const tracerGeo=new THREE.CylinderGeometry(.014,.014,1,4,1,true); tracerGeo.translate(0,.5,0);
-const tracerMatP=new THREE.MeshBasicMaterial({color:0xffe6a0,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false});
-const tracerMatE=new THREE.MeshBasicMaterial({color:0xff7a45,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false});
+const tracerMatP=new THREE.MeshBasicMaterial({color:0xf2d23a,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false});
+const tracerMatE=new THREE.MeshBasicMaterial({color:0xffa23a,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false});
+// 屎彈不發光，是一條會噴到牆上的棕色濃漿
+const tracerMatPoop=new THREE.MeshBasicMaterial({color:0x7c4a18,transparent:true,opacity:.75,depthWrite:false});
 const tracers=[]; const UP=new THREE.Vector3(0,1,0);
-function tracer(from,to,enemy){
+function tracer(from,to,enemy,kind){
   if(tracers.length>120) return;
   const dir=new THREE.Vector3().subVectors(to,from); const L=dir.length(); if(L<.5) return; dir.divideScalar(L);
-  const m=new THREE.Mesh(tracerGeo,enemy?tracerMatE:tracerMatP); m.position.copy(from); m.quaternion.setFromUnitVectors(UP,dir); m.scale.set(enemy?1.4:1,L,enemy?1.4:1);
-  scene.add(m); tracers.push({m,life:enemy?.08:.06});
+  const poop=kind==='poop';
+  const m=new THREE.Mesh(tracerGeo,enemy?tracerMatE:(poop?tracerMatPoop:tracerMatP));
+  m.position.copy(from); m.quaternion.setFromUnitVectors(UP,dir);
+  const t=enemy?1.4:(poop?1.8:1);                      // 屎彈比尿柱粗一點
+  m.scale.set(t,L,t);
+  scene.add(m); tracers.push({m,life:enemy?.08:(poop?.1:.06)});
 }
 const partGeo=new THREE.BoxGeometry(.06,.06,.06); const partMats={};
 const particles=[];
@@ -2026,33 +2082,33 @@ function puff(p,color,n,speed){
     particles.push({m,v:new THREE.Vector3(rand(-1,1),rand(.3,1.6),rand(-1,1)).multiplyScalar(speed||2.5),life:rand(.25,.5)}); }
 }
 let lootCullT=0;
-const holeGeo=new THREE.PlaneGeometry(.11,.11);
-const holeMat=new THREE.MeshBasicMaterial({color:0x1a1612,transparent:true,opacity:.8,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2});
+const holeGeo=new THREE.PlaneGeometry(.22,.22);
+const holeMat=new THREE.MeshBasicMaterial({color:0x4a3414,transparent:true,opacity:.78,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2});
 const holes=[];
 function bulletHole(p,n){
-  const m=new THREE.Mesh(holeGeo,holeMat); m.position.copy(p).addScaledVector(n,.012); m.lookAt(m.position.x+n.x,m.position.y+n.y,m.position.z+n.z); m.rotation.z=Math.random()*6;
+  const m=new THREE.Mesh(holeGeo,holeMat); m.position.copy(p).addScaledVector(n,.012); m.scale.setScalar(.7+Math.random()*.7); m.lookAt(m.position.x+n.x,m.position.y+n.y,m.position.z+n.z); m.rotation.z=Math.random()*6;
   scene.add(m); holes.push(m); if(holes.length>90) scene.remove(holes.shift());
 }
 
 /* ================= Weapons ================= */
 const WEAPONS=[
-  {id:'rifle',name:'突擊步槍 AR-7',short:'步槍',auto:true,rate:.092,dmg:25,head:2.2,pellets:1,spread:.012,move:.03,ads:.0025,recoil:.011,kick:.6,range:320,adsFov:50,sound:'rifle',hip:[.2,-.2,-.46],adsZ:-.42,
+  {id:'rifle',name:'連發腸槍 BM-7',short:'腸槍',auto:true,rate:.092,dmg:25,head:2.2,pellets:1,spread:.012,move:.03,ads:.0025,recoil:.011,kick:.6,range:320,adsFov:50,sound:'poop',ammo:'poop',hip:[.2,-.2,-.46],adsZ:-.42,
    magSize:30,reload:2.2,ammoPack:90,botMag:30,botReload:2.4},
-  {id:'shotgun',name:'霰彈槍 SG-12',short:'霰彈',auto:false,rate:.72,dmg:11,head:1.8,pellets:9,spread:.07,move:.02,ads:.05,recoil:.06,kick:1.6,range:70,adsFov:58,sound:'shotgun',falloff:true,hip:[.21,-.21,-.45],adsZ:-.44,
+  {id:'shotgun',name:'噴屎霰彈 SG-12',short:'噴屎',auto:false,rate:.72,dmg:11,head:1.8,pellets:9,spread:.07,move:.02,ads:.05,recoil:.06,kick:1.6,range:70,adsFov:58,sound:'splat',ammo:'poop',falloff:true,hip:[.21,-.21,-.45],adsZ:-.44,
    magSize:7,reload:3.1,ammoPack:28,botMag:7,botReload:3.2},
-  {id:'sniper',name:'狙擊槍 LR-90',short:'狙擊',auto:false,rate:1.05,dmg:92,head:3,pellets:1,spread:.07,move:.06,ads:0,recoil:.07,kick:2,range:700,adsFov:14,scope:true,sound:'sniper',hip:[.21,-.21,-.46],adsZ:-.3,
+  {id:'sniper',name:'狙擊尿柱 LR-90',short:'尿柱',auto:false,rate:1.05,dmg:92,head:3,pellets:1,spread:.07,move:.06,ads:0,recoil:.07,kick:2,range:700,adsFov:14,scope:true,sound:'stream',ammo:'pee',hip:[.21,-.21,-.46],adsZ:-.3,
    magSize:5,reload:3.4,ammoPack:20,botMag:5,botReload:3.6},
-  {id:'pistol',name:'手槍 P-9',short:'手槍',auto:false,rate:.14,dmg:24,head:2.2,pellets:1,spread:.014,move:.02,ads:.004,recoil:.022,kick:.9,range:220,adsFov:56,sound:'pistol',hip:[.15,-.14,-.42],adsZ:-.5,
+  {id:'pistol',name:'尿尿小槍 P-9',short:'小槍',auto:false,rate:.14,dmg:24,head:2.2,pellets:1,spread:.014,move:.02,ads:.004,recoil:.022,kick:.9,range:220,adsFov:56,sound:'squirt',ammo:'pee',hip:[.15,-.14,-.42],adsZ:-.5,
    magSize:15,reload:1.8,ammoPack:60,botMag:12,botReload:2},
 ];
-WEAPONS.push({id:'fist',name:'拳頭',short:'拳頭',auto:false,rate:.42,dmg:34,head:1.5,pellets:1,spread:.02,move:0,ads:.01,
-  recoil:.012,kick:.7,range:2.3,adsFov:66,sound:'shotgun',melee:true,fists:true,hip:[.2,-.22,-.34],adsZ:-.38,
+WEAPONS.push({id:'fist',name:'糞拳',short:'糞拳',auto:false,rate:.42,dmg:34,head:1.5,pellets:1,spread:.02,move:0,ads:.01,
+  recoil:.012,kick:.7,range:2.3,adsFov:66,sound:'splat',melee:true,fists:true,hip:[.2,-.22,-.34],adsZ:-.38,
   magSize:1,reload:0,ammoPack:1,botMag:1,botReload:0});
-WEAPONS.push({id:'lmg',name:'輕機槍 M249',short:'機槍',auto:true,rate:.078,dmg:28,head:2,pellets:1,spread:.022,move:.05,
-  ads:.006,recoil:.015,kick:.85,range:300,adsFov:52,sound:'rifle',hip:[.23,-.23,-.44],adsZ:-.42,
+WEAPONS.push({id:'lmg',name:'大腸機槍 M2-49',short:'大腸',auto:true,rate:.078,dmg:28,head:2,pellets:1,spread:.022,move:.05,
+  ads:.006,recoil:.015,kick:.85,range:300,adsFov:52,sound:'poop',ammo:'poop',hip:[.23,-.23,-.44],adsZ:-.42,
   magSize:75,reload:5.4,ammoPack:150,botMag:60,botReload:5.6,rare:true});
-WEAPONS.push({id:'pan',name:'平底鍋',short:'平底鍋',auto:false,rate:.75,dmg:120,head:1,pellets:1,spread:.02,move:0,ads:.01,
-  recoil:.02,kick:1.2,range:3.4,adsFov:70,sound:'shotgun',melee:true,hip:[.22,-.24,-.4],adsZ:-.44,
+WEAPONS.push({id:'pan',name:'馬桶蓋',short:'馬桶蓋',auto:false,rate:.75,dmg:120,head:1,pellets:1,spread:.02,move:0,ads:.01,
+  recoil:.02,kick:1.2,range:3.4,adsFov:70,sound:'splat',melee:true,hip:[.22,-.24,-.4],adsZ:-.44,
   magSize:1,reload:0,ammoPack:1,botMag:1,botReload:0});
 const WBY=id=>WEAPONS.find(w=>w.id===id);
 const OPTICS={1:{fov:50,label:'紅點'},2:{fov:33,label:'2 倍鏡'},3:{fov:24,label:'3 倍鏡'},4:{fov:18,label:'4 倍鏡'},8:{fov:10,label:'8 倍鏡'}};
@@ -2096,10 +2152,13 @@ function buildGun(kind){
     if(e!=null){ mm.emissive=new THREE.Color(e).convertSRGBToLinear(); mm.emissiveIntensity=1.4; } return mm; };
   const B=(m,w,h,d,x,y,z,rx,rz)=>{ const s=new THREE.Mesh(boxGeo,m); s.scale.set(w,h,d); s.position.set(x,y,z); if(rx) s.rotation.x=rx; if(rz) s.rotation.z=rz; g.add(s); return s; };
   const CYL=(m,r1,r2,h,x,y,z,rx)=>{ const s=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,14),m); s.position.set(x,y,z); s.rotation.x=rx==null?Math.PI/2:rx; g.add(s); return s; };
-  const metal=S(0x33383d,.42,.75), black=S(0x15171a,.5,.5), poly=S(0x23262a,.75,.12),
-        tan=S(0x8c7b58,.8,.08), wood=S(0x6b4528,.75,.05), olive=S(0x4b5339,.8,.08),
-        rail=S(0x2a2e33,.4,.8), lens=S(0x1b3550,.15,.3,0x1d4f7a),
-        skin=S(0xc99572,.85,0), glove=S(0x2a2d28,.85,.05), sleeve=S(0x2f4d63,.9,.04);
+  // 尿類武器是陶瓷白＋亮黃料桶，屎類是棕色管路
+  const pee=(kind==='pistol'||kind==='sniper');
+  const C1=pee?0xe8e4da:0x6d4522, C2=pee?0xf0d44a:0x3d2512;
+  const metal=S(0x46423c,.45,.6), black=S(0x241c16,.5,.4), poly=S(C1,.7,.14),
+        tan=S(C2,.8,.08), wood=S(0x4a2f17,.75,.05), olive=S(pee?0xd9d3c5:0x5c4321,.8,.08),
+        rail=S(0x2e2822,.45,.6), lens=S(0x3a2a12,.15,.3,0x8a5a18),
+        skin=S(0xc99572,.85,0), glove=S(0x3b3024,.85,.05), sleeve=S(0x4b4130,.9,.04);
   let mz,sy;
   if(kind==='rifle'){
     B(poly,.072,.095,.44,0,0,-.05);                       // receiver
@@ -2166,6 +2225,13 @@ function buildGun(kind){
     CYL(black,.009,.009,.06,0,.047,-.18);
     mz=-.2; sy=.082;
   }
+  // 每把噴射武器下面都掛一桶料
+  if(!(kind==='fist'||kind==='pan')){
+    const tank=new THREE.Mesh(new THREE.CylinderGeometry(.046,.046,.19,12),S(pee?0xf2dd5a:0x4b2f14,.6,.15));
+    tank.rotation.z=Math.PI/2; tank.position.set(0,-.08,kind==='pistol'?.02:.17); g.add(tank);
+    const cap=new THREE.Mesh(new THREE.CylinderGeometry(.052,.052,.025,12),S(0x2b2218,.5,.4));
+    cap.rotation.z=Math.PI/2; cap.position.set(.1,-.08,kind==='pistol'?.02:.17); g.add(cap);
+  }
   // hands and forearms
   // firing hand + forearm, kept slim so they don't crowd the sight picture
   B(glove,.075,.075,.12,.005,-.105,kind==='pistol'?.06:.11);
@@ -2182,6 +2248,43 @@ function buildGun(kind){
 WEAPONS.forEach(w=>{ const b=buildGun(w.id); w.model=b.g; w.flash=b.flash; w.sightY=b.sy; w.sightHousing=b.g.userData.sightHousing||null; });
 $('slots').innerHTML=WEAPONS.map((w,i)=>w.fists?'':`<li data-i="${i}">${i+1} ${w.short}</li>`).join('');
 
+/* ================= 角色：一個超強專長 + 一個要命的毛病 ================= */
+const CHARS=[
+  {id:'norm',emo:'\ud83e\uddcd',name:'一般人',tag:'腸胃健康，沒什麼故事',
+   good:'樣樣標準，沒有弱點',bad:'也沒有任何強項',hp:100},
+  {id:'jet',emo:'\ud83d\udca8',name:'噴射狂',tag:'腸胃炎第三天',
+   good:'射速 +50%、跑得更快',bad:'體力只有 70，一碰就倒',hp:70,rate:.66,spd:1.14},
+  {id:'jam',emo:'\ud83d\ude24',name:'便祕大師',tag:'憋了整整三個月',
+   good:'傷害 ×2.1、體力 125',bad:'射速只剩一半，擠不出來',hp:125,rate:1.9,dmg:2.1},
+  {id:'rush',emo:'\ud83c\udfc3',name:'尿急先生',tag:'廁所還有五百公尺',
+   good:'移動 +42%，誰都追不到',bad:'站著不動就漏，每秒扣 3.4 體力',hp:85,spd:1.42,leak:3.4},
+  {id:'tank',emo:'\ud83d\udee1\ufe0f',name:'糞坦克',tag:'三十年滷肉飯養出來的',
+   good:'體力 190、受傷 −25%',bad:'走得很慢，腰射散到外太空',hp:190,spd:.7,take:.75,spread:1.7},
+  {id:'lid',emo:'\ud83d\udebd',name:'馬桶騎士',tag:'盾牌就是馬桶蓋',
+   good:'蹲下時受傷 −70%，正面硬吃',bad:'移動 −18%、跳不高',hp:110,spd:.82,jump:.78,crouchArmor:.3},
+  {id:'eat',emo:'\ud83d\ude0b',name:'食糞者',tag:'別問，問就是香',
+   good:'每擊殺回 35 體力，越殺越勇',bad:'體力 75、傷害 −10%',hp:75,dmg:.9,killHeal:35},
+];
+let CH=CHARS[0];
+const maxHp=()=>CH.hp||100;
+function applyChar(){
+  CH=CHARS.find(c=>c.id===SET.char)||CHARS[0];
+  try{ localStorage.setItem('fps_char',CH.id); }catch(e){}
+}
+let leakFxT=0;
+// 尿急先生漏尿：腳邊滴黃點，螢幕邊緣泛紅
+function leakFx(dt){
+  leakFxT-=dt; if(leakFxT>0) return; leakFxT=.2;
+  puff(new THREE.Vector3(P.pos.x,P.pos.y+.3,P.pos.z),0xf2d23a,2,.8);
+  hurtT=Math.min(1,hurtT+.05);
+}
+// 擊殺回血（食糞者）
+function charKill(){
+  if(!CH.killHeal||!P.alive||P.down) return;
+  if(P.hp>=maxHp()) return;
+  P.hp=Math.min(maxHp(),P.hp+CH.killHeal);
+  toast('吃了一口，回 '+CH.killHeal+' 體力',1100); beep(540,.14,'sine',.12,760);
+}
 /* ================= Player ================= */
 const P={pos:new THREE.Vector3(),vel:new THREE.Vector3(),vy:0,onGround:true,yaw:0,pitch:0,hp:100,armor:0,helmet:0,bag:[],crouch:false,eyeH:1.65,alive:true,sprint:false,
   lean:0,leanOff:new THREE.Vector3(),team:0,isPlayer:true,name:'你'};
@@ -2267,6 +2370,7 @@ function currentSpread(){
   if(sp>1) s+=w.move*(adsT>.8?.35:1)*(sp>7?1.6:1);
   if(!P.onGround) s+=.06;
   if(P.crouch) s*=.65;
+  if(adsT<=.8) s*=(CH.spread||1);          // 腰射散佈吃角色修正
   return s+bloom;
 }
 const _fwd=new THREE.Vector3(), _r=new THREE.Vector3(), _u=new THREE.Vector3(), _d=new THREE.Vector3();
@@ -2274,7 +2378,7 @@ const raycaster=new THREE.Raycaster();
 function muzzleWorld(){ const a=adsT; return new THREE.Vector3(.2*(1-a),-.17+.1*a,-.9).applyMatrix4(camera.matrixWorld); }
 let swingT=0;
 function melee(){
-  const w=WEAPONS[curW]; shotT=w.rate; stats.shots++; swingT=.32;
+  const w=WEAPONS[curW]; shotT=w.rate*(CH.rate||1); stats.shots++; swingT=.32;
   camera.updateMatrixWorld(); camera.getWorldDirection(_fwd);
   _r.setFromMatrixColumn(camera.matrixWorld,0); _u.setFromMatrixColumn(camera.matrixWorld,1);
   const o=camera.position.clone();
@@ -2286,12 +2390,12 @@ function melee(){
     raycaster.set(o,_d); raycaster.near=0; raycaster.far=maxT;
     const hits=raycaster.intersectObjects(enemyHitboxes,false);
     if(hits.length){ const h=hits[0], bot=h.object.userData.bot, part=h.object.userData.part;
-      let dmg=w.dmg; if(part==='head') dmg*=w.head;
+      let dmg=w.dmg*(CH.dmg||1); if(part==='head') dmg*=w.head;
       if(bot.damage(dmg,part==='head',P)) killed=true;
-      hitAny=true; head=part==='head'; endPoint=h.point; puff(h.point,0x9a1b14,6,2.4);
+      hitAny=true; head=part==='head'; endPoint=h.point; puff(h.point,0x6b4a1e,7,2.4);
     } else if(env&&env.t<w.range&&!endPoint) endPoint=o.clone().addScaledVector(_d,env.t);
   }
-  if(hitAny){ stats.hits++; showHit(killed,head); playShot('shotgun',.5,0); beep(220,.12,'square',.14,90); }
+  if(hitAny){ stats.hits++; showHit(killed,head); if(killed) charKill(); playShot('splat',.5,0); beep(220,.12,'square',.14,90); }
   else { beep(140,.09,'sine',.05,70); if(endPoint) puff(endPoint,0x9c968a,3,1.6); }
   P.pitch=clamp(P.pitch+.012,-1.52,1.52);
   hearShot(P,18);
@@ -2303,11 +2407,11 @@ function fire(){
     shotT=.25; beep(140,.05,'square',.05);
     if(w.res>0){ startReload(); return; }
     const alt=WEAPONS.findIndex(x=>x.have&&(x.mag>0||x.res>0));
-    if(alt>=0&&alt!==curW){ switchWeapon(alt); toast('換成還有子彈的槍',1300); }
-    else toast('沒子彈了，去地上找彈藥箱',1600);
+    if(alt>=0&&alt!==curW){ switchWeapon(alt); toast('換成還有料的槍',1300); }
+    else toast('噴完了，去地上找腸氣罐',1600);
     return;
   }
-  w.mag--; shotT=w.rate; stats.shots++;
+  w.mag--; shotT=w.rate*(CH.rate||1); stats.shots++;
   camera.updateMatrixWorld(); camera.getWorldDirection(_fwd);
   _r.setFromMatrixColumn(camera.matrixWorld,0); _u.setFromMatrixColumn(camera.matrixWorld,1);
   const o=camera.position.clone(), spread=currentSpread(), mw=muzzleWorld();
@@ -2318,15 +2422,15 @@ function fire(){
     raycaster.set(o,_d); raycaster.near=0; raycaster.far=maxT;
     const hits=raycaster.intersectObjects(enemyHitboxes,false); let end;
     if(hits.length){ const h=hits[0], bot=h.object.userData.bot, part=h.object.userData.part;
-      let dmg=w.dmg; if(w.falloff) dmg*=clamp(1-(h.distance-6)/30,.2,1);
+      let dmg=w.dmg*(CH.dmg||1); if(w.falloff) dmg*=clamp(1-(h.distance-6)/30,.2,1);
       if(part==='head') dmg*=w.head; else if(part==='leg') dmg*=.75;
       if(hitEntity(bot,dmg,part==='head')) killed=true; hitAny=true; if(part==='head') head=true;
-      puff(h.point,0x9a1b14,4,2); end=h.point;
+      puff(h.point,w.ammo==='pee'?0xe8c93a:0x6b4a1e,5,2.2); end=h.point;
     } else if(env){ end=o.clone().addScaledVector(_d,env.t); puff(end,env.normal.y>.5&&end.y<.05?0x6a5a3c:0x9c968a,3,2); bulletHole(end,env.normal); }
     else end=o.clone().addScaledVector(_d,Math.min(w.range,260));
-    if(i<4) tracer(mw,end,false);
+    if(i<4) tracer(mw,end,false,w.ammo);
   }
-  if(hitAny){ stats.hits++; showHit(killed,head); beep(head?2100:1500,head?.12:.05,head?'triangle':'square',head?.16:.07); }
+  if(hitAny){ stats.hits++; showHit(killed,head); if(killed) charKill(); beep(head?2100:1500,head?.12:.05,head?'triangle':'square',head?.16:.07); }
   const rc=w.recoil*(adsT>.8?.6:1)*(P.crouch?.75:1);
   P.pitch=clamp(P.pitch+rc*rand(.75,1.05),-1.52,1.52); P.yaw+=rand(-1,1)*rc*.35;
   if(w.auto) bloom=Math.min(bloom+.0045,.035);
@@ -2350,21 +2454,23 @@ const DIFF={
 let D=DIFF.normal;
 // game modes: each one fixes its own head count, map pool and match length
 const MODES=[
-  {id:'br',name:'吃雞',sub:'跳傘入場 · 縮圈 · 最後一隊生存',drop:true,zone:true,loot:true,respawn:false,knock:true,
-   variants:[{id:'big',name:'百人吃雞',sub:'100 人 · 超大地圖',total:100,squad:4,size:2.2},
-             {id:'fast',name:'快速吃雞',sub:'32 人 · 大地圖',total:32,squad:4,size:1.7}]},
+  {id:'br',name:'吃屎',sub:'跳傘入場 · 縮圈 · 最後一坨生存',drop:true,zone:true,loot:true,respawn:false,knock:true,
+   variants:[{id:'big',name:'百人吃屎',sub:'100 人 · 超大地圖',total:100,squad:4,size:2.2},
+             {id:'fast',name:'快速吃屎',sub:'32 人 · 大地圖',total:32,squad:4,size:1.7}]},
   {id:'tdm',name:'團隊死鬥',sub:'兩隊無限復活 · 先拿到目標分數',drop:false,zone:false,loot:false,respawn:true,
    size:.8,forceTeams:2,squadOptions:[2,4,8,12],targets:[50,100,200],defTarget:100},
     {id:'duel',name:'單挑',sub:'1 對 1 · 先拿到目標擊殺數',drop:false,zone:false,loot:false,respawn:true,
    size:.5,forceTeams:2,fixedSquad:1,targets:[5,10,20],defTarget:10},
-  {id:'gun',name:'軍備競賽',sub:'手槍→霰彈→步槍→狙擊→平底鍋',drop:false,zone:false,loot:false,respawn:true,
+  {id:'gun',name:'軍備競賽',sub:'小槍→噴屎→腸槍→尿柱→馬桶蓋',drop:false,zone:false,loot:false,respawn:true,
    size:.85,squadOptions:[2,4],teamOptions:[2,4],ladderKills:5,minutes:[10,15],defMinutes:10,},
-  {id:'snipe',name:'狙擊賽',sub:'只有狙擊槍 · 死了就淘汰 · 最後一隊生存',drop:false,zone:true,loot:false,respawn:false,knock:true,
+  {id:'snipe',name:'狙擊賽',sub:'只有尿柱 · 死了就淘汰 · 最後一隊生存',drop:false,zone:true,loot:false,respawn:false,knock:true,
    size:1.25,loadout:['sniper'],squadOptions:[1,2],teamOptions:[10,20,50],defTeams:20},
 ];
 const DEFAULT_LOADOUT=['rifle','shotgun','sniper','pistol'];
 // lobby settings
-const SET={mode:'br',map:'island',variant:'big',squad:4,teams:2,minutes:10,target:50,scale:'mid',solo:'team'};
+const SET={mode:'br',map:'island',variant:'big',squad:4,teams:2,minutes:10,target:50,scale:'mid',solo:'team',char:'norm'};
+try{ const c0=localStorage.getItem('fps_char'); if(c0&&CHARS.some(x=>x.id===c0)) SET.char=c0; }catch(e){}
+CH=CHARS.find(c=>c.id===SET.char)||CHARS[0];
 const SCALES={small:{v:.7,label:'小'},mid:{v:1,label:'中'},big:{v:1.4,label:'大'}};
 let MODE=MODES[0];
 let teamScore=[], matchT=0, modeWinner=null;
@@ -2396,8 +2502,8 @@ function applyModeLimits(){
   return {total:TEAMS*PER};
 }
 const TEAM_CLOTH=[0x2f6f9a,0x5a653c,0x7a6a4f,0x6b3b36,0x55585e,0x4d3f6b,0x2f6b53,0x8a5a2a];
-const TEAM_LABEL=['你的小隊','橄欖隊','沙漠隊','紅土隊','灰狼隊','暗紫隊','松綠隊','赭石隊'];
-const NAMES=['阿龍','小虎','老K','黑鷹','子彈哥','夜狼','火狐','山貓','鐵頭','飛鏢','眼鏡蛇','老鷹','雷霆','幽靈','野豬','刀鋒','石頭','閃電','黑熊','孤狼','赤狐','獵犬','鬼面','沙鷹'];
+const TEAM_LABEL=['你的小隊','黃金隊','咖哩隊','滷汁隊','泥巴隊','芥末隊','抹茶隊','可可隊'];
+const NAMES=['阿屎','噴射哥','便祕王','小黃','一條龍','軟糖','臭豆腐','馬桶俠','水球','衝鋒尿','老滷','布丁','芥末醬','咖哩哥','麻糬','泥巴','香腸','沖水俠','蹲神','爆漿','糞金龜','屁屁','痛快','夜壺'];
 let bots=[], enemyHitboxes=[], teamTargets=[], teamAliveCache=[];
 const _t=new THREE.Vector3();
 function turnToward(a,b,max){ let d=b-a; while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2; return a+clamp(d,-max,max); }
@@ -3004,18 +3110,20 @@ function spawnPickup(type,x,z,y,pid){
   const weapon=wid?WBY(wid):null;
   let beamCol=BEAMC.weapon, label='';
   if(type==='hp'){
-    const b=new THREE.Mesh(boxGeo,lam(0xf2f2ec)); b.scale.set(.5,.32,.4); g.add(b);
-    const c1=new THREE.Mesh(boxGeo,lam(0x2fb24f)); c1.scale.set(.3,.34,.09); g.add(c1);
-    const c2=c1.clone(); c2.scale.set(.09,.34,.3); g.add(c2);
+    // 衛生紙：一捲白的，中間一個芯
+    const b=new THREE.Mesh(new THREE.CylinderGeometry(.26,.26,.3,14),lam(0xf7f5ee)); b.rotation.x=Math.PI/2; g.add(b);
+    const c1=new THREE.Mesh(new THREE.CylinderGeometry(.1,.1,.32,10),lam(0xbca37a)); c1.rotation.x=Math.PI/2; g.add(c1);
     beamCol=BEAMC.hp;
   } else if(type==='armor'){
-    const b=new THREE.Mesh(boxGeo,lam(0x2f6ea8)); b.scale.set(.5,.6,.22); g.add(b);
-    const s=new THREE.Mesh(boxGeo,lam(0x1d3a57)); s.scale.set(.52,.12,.24); s.position.y=.12; g.add(s);
+    // 尿布裝甲
+    const b=new THREE.Mesh(boxGeo,lam(0xf4f1e6)); b.scale.set(.52,.52,.26); g.add(b);
+    const s=new THREE.Mesh(boxGeo,lam(0x8fd3e8)); s.scale.set(.54,.12,.28); s.position.y=.14; g.add(s);
     beamCol=BEAMC.armor;
   } else if(type==='ammo'){
-    const b=new THREE.Mesh(boxGeo,lam(0x5d6137)); b.scale.set(.46,.3,.34); g.add(b);
-    const l=new THREE.Mesh(boxGeo,lam(0x3f4226)); l.scale.set(.48,.07,.36); l.position.y=.16; g.add(l);
-    const t=new THREE.Mesh(boxGeo,lam(0xffb000)); t.scale.set(.2,.06,.06); t.position.set(0,.06,.18); g.add(t);
+    // 腸氣罐
+    const b=new THREE.Mesh(new THREE.CylinderGeometry(.17,.17,.44,12),lam(0x6d4a22)); g.add(b);
+    const l=new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,.1,10),lam(0xb8b2a4)); l.position.y=.26; g.add(l);
+    const t=new THREE.Mesh(boxGeo,lam(0xf2d23a)); t.scale.set(.36,.08,.36); t.position.y=.04; g.add(t);
     beamCol=BEAMC.ammo;
   } else if(type==='helmet'){
     const dome=new THREE.Mesh(new THREE.SphereGeometry(.26,12,8,0,Math.PI*2,0,Math.PI/2),mat(0x3b4a3a,{rough:.6,metal:.2}));
@@ -3115,10 +3223,10 @@ function takePickup(p){
     let got=false;
     WEAPONS.forEach(w=>{ if(w.have){ w.res=Math.min(w.ammoPack*3,w.res+Math.ceil(w.ammoPack*.6)); got=true; } });
     if(!got) return false;
-    toast('補給彈藥',1300); beep(700,.08,'sine',.1,900); removePickup(p); return true;
+    toast('補滿腸氣',1300); beep(700,.08,'sine',.1,900); removePickup(p); return true;
   }
-  if(p.type==='hp'&&P.hp<100){ P.hp=Math.min(100,P.hp+50); toast('醫療包 +50 HP',1500); beep(880,.08,'sine',.12,1320); removePickup(p); return true; }
-  if(p.type==='armor'&&P.armor<100){ P.armor=Math.min(100,P.armor+50); toast('防彈背心 +50 護甲',1500); beep(880,.08,'sine',.12,1320); removePickup(p); return true; }
+  if(p.type==='hp'&&P.hp<maxHp()){ P.hp=Math.min(maxHp(),P.hp+50); toast('衛生紙 +50 體力',1500); beep(880,.08,'sine',.12,1320); removePickup(p); return true; }
+  if(p.type==='armor'&&P.armor<100){ P.armor=Math.min(100,P.armor+50); toast('尿布裝甲 +50 護甲',1500); beep(880,.08,'sine',.12,1320); removePickup(p); return true; }
   return false;
 }
 
@@ -3203,6 +3311,8 @@ function showHit(kill,head){ const h=$('hitmark'); h.className='hud'+(kill?' kil
 function hurtPlayer(dmg,from,attacker){
   if(P.down){ P.lastHitBy=attacker||null; P.downHp-=dmg*.8; if(P.downHp<=0) playerDie(attacker); return; }
   if(!P.alive||!inGame()) return;
+  dmg*=(CH.take||1);
+  if(CH.crouchArmor&&P.crouch) dmg*=CH.crouchArmor;   // 馬桶騎士蹲下擋傷
   if(P.helmet>0){ const hb=Math.min(P.helmet,dmg*.3); P.helmet-=hb; dmg-=hb; }   // helmet takes the first bite
   if(P.armor>0){ const ab=Math.min(P.armor,dmg*.5); P.armor-=ab; dmg-=ab; }
   P.hp-=dmg; hurtT=Math.min(1,hurtT+.45); beep(170,.12,'sawtooth',.07,90);
@@ -3231,7 +3341,7 @@ function dot(g,x,z,r,col,stroke){ g.fillStyle=col; g.beginPath(); g.arc(toMM(x),
 let bagOpen=false, bagPick=-1;
 // simple inline art so the backpack reads at a glance
 function gunArt(id){
-  const C='#cdd5d0', D='#8d968f', A='#ffb000';
+  const C='#c9a24a', D='#6d4a22', A='#f2d23a';
   const P5=(w,h,x,y,c)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1.5" fill="${c}"/>`;
   let body='';
   if(id==='rifle') body=P5(34,7,16,11,C)+P5(18,3,46,13,D)+P5(6,9,24,18,D)+P5(12,5,4,12,D);
@@ -3692,7 +3802,7 @@ function reviveEntity(e){
   const sp=spawnPointFor(e.team);
   e.pos.set(sp.x,0,sp.z); e.vy=0; e.onGround=true; e.alive=true;
   if(e===P){
-    P.hp=100; P.armor=0; P.helmet=0; P.vel.set(0,0,0); P.dropMode=null; deathT=0; spectate=false; specBot=null; killCam=null; P.vault=null;
+    P.hp=maxHp(); P.armor=0; P.helmet=0; P.vel.set(0,0,0); P.dropMode=null; deathT=0; spectate=false; specBot=null; killCam=null; P.vault=null;
     $('spec').hidden=true; $('respawn').hidden=true; $('killcam').hidden=true; hurtT=0;
     giveLoadout(P); rebuildHitboxes(); banner('重新投入戰場');
   } else {
@@ -3732,7 +3842,7 @@ function resetGame(){
   for(const h of holes) scene.remove(h); holes.length=0;
   resetZone();
   if(!MODE.zone){ zone.r=9999; zone.nr=null; zone.mode='final'; }
-  Object.assign(P,{hp:100,armor:0,helmet:0,alive:true,crouch:false,eyeH:1.65,vy:0,onGround:true,pitch:0,lean:0,dropMode:null,vault:null,down:false,downHp:0,reviveT:0});
+  Object.assign(P,{hp:maxHp(),armor:0,helmet:0,leakT:0,alive:true,crouch:false,eyeH:1.65,vy:0,onGround:true,pitch:0,lean:0,dropMode:null,vault:null,down:false,downHp:0,reviveT:0});
   P.bag=[]; toggleBag(false);
   $('downed').hidden=true; P.vel.set(0,0,0); P.leanOff.set(0,0,0);
   playerChute.visible=false;
@@ -3784,6 +3894,7 @@ function ensureMap(){
 let WORLDSEED=1;
 function startGame(){
   initAudio();
+  applyChar();
   WORLDSEED=(NET.inMatch&&NET.seed)?NET.seed:((Math.random()*2147483647)|0)||1;
   MODE=MODES.find(m=>m.id===SET.mode)||MODES[0];
   applyModeLimits();
@@ -3799,7 +3910,7 @@ function startGame(){
   startIntro();
   requestLock();
   banner(MODE.drop?`${curMap.name}：按空白鍵跳傘`
-    :MODE.id==='gun'?'軍備競賽：每把槍殺 5 人升級，最後用平底鍋收尾'
+    :MODE.id==='gun'?'軍備競賽：每把槍殺 5 人升級，最後用馬桶蓋收尾'
     :MODE.id==='duel'?`單挑：先拿 ${SET.target} 殺`
     :MODE.id==='snipe'?'狙擊賽：死了就淘汰，撐到最後'
     :`團隊死鬥：先拿到 ${SET.target} 分`);
@@ -3857,7 +3968,7 @@ function startIntro(){
   $('introMode').textContent=MODE.name;
   $('introMap').textContent=curMap.name+'　'+(TEAMS*PER)+' 人';
   $('introRule').textContent=MODE.drop?'準備跳傘':MODE.id==='tdm'?('目標 '+SET.target+' 分')
-    :MODE.id==='duel'?('先拿 '+MODE.killTarget+' 殺'):MODE.id==='gun'?'從手槍打到平底鍋':'死了就淘汰';
+    :MODE.id==='duel'?('先拿 '+MODE.killTarget+' 殺'):MODE.id==='gun'?'從小槍打到馬桶蓋':'死了就淘汰';
   const a=Math.random()*Math.PI*2;
   introFrom.set(P.pos.x+Math.cos(a)*34,P.pos.y+26,P.pos.z+Math.sin(a)*34);
   introSting();
@@ -3893,7 +4004,7 @@ function endGame(win){
   if(MODE.respawn){
     let best=0; for(let t=1;t<TEAMS;t++) best=Math.max(best,teamScore[t]||0);
     $('endSub').textContent=MODE.id==='gun'
-      ? (win?'你先用平底鍋收尾，軍備競賽獲勝！':`${modeWinner&&modeWinner.name?modeWinner.name:'對手'} 先完成了整套武器`)
+      ? (win?'你先用馬桶蓋收尾，軍備競賽獲勝！':`${modeWinner&&modeWinner.name?modeWinner.name:'對手'} 先完成了整套武器`)
       : `最終比分 ${teamScore[0]||0} : ${best}`;
   } else
   $('endSub').textContent=win?(P.alive?`你的小隊在 ${TEAMS} 支隊伍中拿下第 1 名`:'你中途陣亡，但隊友守住了第 1 名！'):(matesLeft>0?`目前小隊排名 #${enemyTeams+1} / ${TEAMS}，還有 ${matesLeft} 名隊友在戰鬥`:`小隊排名 #${enemyTeams+1} / ${TEAMS}`);
@@ -3937,7 +4048,7 @@ function netPush(ent,x,y,z,yaw,spd){
 const NET={on:false,ws:null,id:0,hostId:0,code:'',name:'',myTeam:0,peers:new Map(),
   ents:new Map(),inMatch:false,sendT:0,snapT:0,pendTeams:2,pendPer:4,side:'same',endSent:false,
   lastX:0,lastZ:0,spd:0,seed:0};
-// 席位：先選玩法，再從實際席位表上挑位子（吃雞只有一隊，所以全員同隊）
+// 席位：先選玩法，再從實際席位表上挑位子（吃屎只有一隊，所以全員同隊）
 const SEAT={teams:2,per:4,map:[],open:false};
 let NETROSTER=null, netWin=null, diffKey='normal';
 const netHost=()=>NET.on&&NET.id===NET.hostId;
@@ -4202,11 +4313,12 @@ function seatOpen(m){
 }
 function renderSeats(){
   if(!SEAT.open) return;
+  renderChars();
   const shown=seatTeamsShown(), mine=seatOf(NET.id);
   $('seatMode').textContent=MODE.name;
   const m=MAPS.find(x=>x.id===SET.map)||MAPS[0];
   $('seatTag').textContent=MODE.loot
-    ?`${m.name} · 吃雞全員同隊，挑一個位子就好（共 ${SEAT.teams*SEAT.per} 人下場）`
+    ?`${m.name} · 吃屎全員同隊，挑一個位子就好（共 ${SEAT.teams*SEAT.per} 人下場）`
     :`${m.name} · ${SEAT.teams} 隊 × ${SEAT.per} 人，點空位坐進去；沒人坐的位子由 AI 補上`;
   let html='';
   for(let t=0;t<shown;t++){
@@ -4374,6 +4486,24 @@ $('modes').addEventListener('click',e=>{
   if(MODE.defMinutes) SET.minutes=MODE.defMinutes;
   buildSetup(); showScreen('setup'); previewMap();
 });
+function renderChars(){
+  const html=CHARS.map(c=>`<button class="charcard${c.id===SET.char?' on':''}" data-ch="${c.id}">
+    <span class="hpn">${c.hp||100} HP</span>
+    <span class="emo">${c.emo}</span>
+    <b>${c.name}</b>
+    <span class="ct">${c.tag}</span>
+    <span class="cg"><s>▲</s>${c.good}</span>
+    <span class="cb"><s>▼</s>${c.bad}</span></button>`).join('');
+  ['chars','charsSeat'].forEach(id=>{ const el=$(id); if(el) el.innerHTML=html; });
+}
+['chars','charsSeat'].forEach(id=>{
+  const el=$(id); if(!el) return;
+  el.addEventListener('click',e=>{
+    const b=e.target.closest('button[data-ch]'); if(!b) return;
+    SET.char=b.dataset.ch; applyChar(); clickBeep(); renderChars();
+    toast(CH.emo+' '+CH.name+'：'+CH.good,1800);
+  });
+});
 function segHTML(id,opts,cur){
   return `<div class="seg" data-opt="${id}">`+opts.map(o=>
     `<button data-v="${o.v}"${o.v===cur?' class="on"':''}>${o.label}${o.sub?`<small>${o.sub}</small>`:''}</button>`).join('')+`</div>`;
@@ -4400,6 +4530,7 @@ function buildSetup(){
   if(MODE.minutes&&MODE.minutes.length>1) html+=`<div class="row"><h3>比賽時間</h3>`+
     segHTML('minutes',MODE.minutes.map(n=>({v:n,label:n+' 分鐘'})),SET.minutes)+`</div>`;
   $('modeOpts').innerHTML=html;
+  renderChars();
   syncLobby();
 }
 $('maps').addEventListener('click',e=>{
@@ -4427,13 +4558,13 @@ function syncLobby(){
   const rule=MODE.id==='br'?'最後一隊生存'
     :MODE.id==='tdm'?`先拿到 ${SET.target} 分，時間到則比分高者勝`
     :MODE.id==='duel'?`先拿 ${SET.target} 殺`
-    :MODE.id==='gun'?'每把槍殺 5 人升級，先用平底鍋殺滿 5 人者勝'
-    :'只有狙擊槍，死了就淘汰，最後一隊生存';
+    :MODE.id==='gun'?'每把槍殺 5 人升級，先用馬桶蓋殺滿 5 人者勝'
+    :'只有狙擊尿柱，死了就淘汰，最後一隊生存';
   const kit=MODE.loot?'落地空手，地上撿槍':(MODE.id==='gun'?'從手槍開始一路升級':'開局就有 '+(MODE.loadout||DEFAULT_LOADOUT).length+' 把槍');
   const solo=SET.solo==='solo'&&PER>1;
   const mates=solo?0:PER-1;
   const total=TEAMS*PER-(solo?PER-1:0);
-  $('lineup').innerHTML=`<span class="pill">${m.name}</span><span class="pill">${size*2} × ${size*2} 公尺</span>`+`<span class="pill">${TEAMS} 隊 · 共 ${total} 人</span>`+`<span class="pill">${solo?'你單人一隊':(mates>0?'你 + '+mates+' 名隊友':'單兵作戰')}</span>`+`<span class="pill">${rule}</span><span class="pill">${kit}</span>`;
+  $('lineup').innerHTML=`<span class="pill">${m.name}</span><span class="pill">${size*2} × ${size*2} 公尺</span>`+`<span class="pill">${TEAMS} 隊 · 共 ${total} 人</span>`+`<span class="pill">${solo?'你單人一隊':(mates>0?'你 + '+mates+' 名隊友':'單兵作戰')}</span>`+`<span class="pill">${rule}</span><span class="pill">${kit}</span><span class="pill">${CH.emo} ${CH.name}</span>`;
   $('startBtn').textContent=MODE.drop?'登機跳傘':'進入戰場';
 }
 
@@ -4444,7 +4575,7 @@ function onStartClick(){
   MODE=MODES.find(m=>m.id===SET.mode)||MODES[0];
   applyModeLimits();
   const hum=1+NET.peers.size;
-  if(MODE.loot){                      // 吃雞：全員同一隊，隊伍人數跟著房內人數長
+  if(MODE.loot){                      // 吃屎：全員同一隊，隊伍人數跟著房內人數長
     PER=Math.max(PER,hum);
     TEAMS=Math.max(2,Math.round((modeVariant()?modeVariant().total:64)/PER));
   }
@@ -4529,7 +4660,7 @@ function updatePlayer(dt){
   const len=Math.hypot(fx,fz);
   P.sprint=!!(keys.ShiftLeft||keys.ShiftRight)&&fz>0&&!P.crouch&&!aiming&&!mouseDown;
   const leaning=Math.abs(P.lean)>.3;
-  const speed=P.down?1.35:P.crouch?2.8:(aiming||leaning)?3.6:P.sprint?9:6.2;
+  const speed=(P.down?1.35:P.crouch?2.8:(aiming||leaning)?3.6:P.sprint?9:6.2)*(CH.spd||1);
   const sy=Math.sin(P.yaw), cy=Math.cos(P.yaw); let wx=0,wz=0;
   if(len>0){ fx/=len; fz/=len; wx=(-sy*fz+cy*fx)*speed; wz=(-cy*fz-sy*fx)*speed; }
   const acc=P.onGround?14:2.5; P.vel.x+=(wx-P.vel.x)*Math.min(1,acc*dt); P.vel.z+=(wz-P.vel.z)*Math.min(1,acc*dt);
@@ -4537,8 +4668,8 @@ function updatePlayer(dt){
   if(keys.Space){
     const dirX=len>0?wx/(Math.hypot(wx,wz)||1):-sy, dirZ=len>0?wz/(Math.hypot(wx,wz)||1):-cy;
     if(tryVault(P,dirX,dirZ,R_PLAYER)){ keys.Space=false; beep(300,.07,'square',.05,420); }
-    else if(P.onGround&&!P.crouch){ P.vy=7.8; P.onGround=false; P.jumps=1; keys.Space=false; }
-    else if(P.jumps===1&&P.vy<4){ P.vy=6.6; P.jumps=2; keys.Space=false; beep(420,.06,'square',.05,620); }  // second jump
+    else if(P.onGround&&!P.crouch){ P.vy=7.8*(CH.jump||1); P.onGround=false; P.jumps=1; keys.Space=false; }
+    else if(P.jumps===1&&P.vy<4){ P.vy=6.6*(CH.jump||1); P.jumps=2; keys.Space=false; beep(420,.06,'square',.05,620); }  // second jump
   }
   moveEntity(P,P.vel.x*dt,P.vel.z*dt,dt,R_PLAYER,h);
   P.pos.x=clamp(P.pos.x,-MAP+.6,MAP-.6); P.pos.z=clamp(P.pos.z,-MAP+.6,MAP-.6);
@@ -4552,6 +4683,13 @@ function updatePlayer(dt){
   $('leanInd').style.opacity=Math.abs(P.lean)>.4?1:0; $('leanInd').textContent=P.lean<0?'◀ 左探頭':'右探頭 ▶';
   const sp=P.speed();
   if(P.onGround&&sp>1.5){ stepT-=dt*sp; if(stepT<=0){ stepT=P.sprint?2.6:2.2; if(!P.crouch) playStep(); } bobT+=dt*sp*1.25; }
+  // 尿急先生：站著不動就漏
+  if(CH.leak&&P.alive&&!P.down&&!P.dropMode){
+    if(sp<1.2&&P.onGround){ P.leakT=(P.leakT||0)+dt;
+      if(P.leakT>1.2){ P.hp-=CH.leak*dt; leakFx(dt);
+        if(P.hp<=0){ P.hp=0; playerDie(); return; } }
+    } else P.leakT=0;
+  }
   const out=Math.hypot(P.pos.x-zone.x,P.pos.z-zone.z)>zone.r;
   $('outzone').hidden=!out; $('bluefx').style.opacity=out?1:0;
   if(out){ P.hp-=zoneDps()*dt; if(P.hp<=0){ P.hp=0; playerDie(); return; } }
@@ -4614,10 +4752,10 @@ function updateWeapon(dt){
 let hudT=0;
 function updateHUD(dt){
   hurtT=Math.max(0,hurtT-dt*1.4);
-  const low=P.alive&&P.hp<30?(.25+.15*Math.sin(performance.now()/180)):0;
+  const low=P.alive&&P.hp<maxHp()*.3?(.25+.15*Math.sin(performance.now()/180)):0;
   $('vignette').style.opacity=Math.min(1,hurtT+low);
   hudT-=dt; if(hudT>0) return; hudT=.05;
-  $('hpN').textContent=Math.ceil(P.hp); $('hpFill').style.width=P.hp+'%'; $('hpFill').classList.toggle('low',P.hp<30);
+  $('hpN').textContent=Math.ceil(P.hp); $('hpFill').style.width=Math.max(0,Math.min(100,P.hp/maxHp()*100))+'%'; $('hpFill').classList.toggle('low',P.hp<maxHp()*.3);
   $('arN').textContent=Math.ceil(P.armor); $('arFill').style.width=P.armor+'%';
   $('hmN').textContent=Math.ceil(P.helmet); $('hmFill').style.width=P.helmet+'%';
   const w=WEAPONS[curW];
@@ -4780,6 +4918,8 @@ if(typeof location!=='undefined'&&location.hash==='#dev') window.__dev={
   faceFirst(){ const e=[...NET.ents.values()][0]; if(!e) return 'none'; P.pos.set(e.pos.x,e.pos.y,e.pos.z+3.2); P.yaw=Math.atan2(-(e.pos.x-P.pos.x),-(e.pos.z-P.pos.z)); P.pitch=-.03; return e.name; },
   get score(){return teamScore}, get mt(){return matchT},
   get SEAT(){return SEAT}, get seed(){return WORLDSEED},
+  get props(){ return THEME_PROPS; },
+  CHARS, char(id){ if(id){ SET.char=id; applyChar(); } return CH.name+' maxHp='+maxHp(); },
   seatPick(i){ const b=$('seatGrid').querySelector('button[data-i="'+i+'"]'); if(!b) return 'no seat '+i; b.click(); return 'clicked '+i; },
   seatScreen(){ return {open:SEAT.open, shown:$('scrSeats').hidden?'hidden':'visible', html:$('seatGrid').textContent.trim(), hint:$('seatHint').textContent}; },
   lootSig(){ return pickups.length+'/'+pickups.slice(0,6).map(p=>p.pid+':'+p.type+':'+p.x.toFixed(1)).join(','); },
