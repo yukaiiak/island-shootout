@@ -382,11 +382,41 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .gcard .kk{display:inline-block;font:700 11px var(--font-hud);color:var(--fg);
   background:rgba(255,255,255,.09);border:1px solid var(--line);border-radius:4px;padding:1px 6px;margin:0 1px}
 @media (max-width:640px){ .gcard p{font-size:13px} }
+
+/* ---------- 被大便打到，畫面上就是一坨 ---------- */
+#splats{inset:0;overflow:hidden;z-index:6}
+.splat{position:absolute;opacity:.92;transition:opacity .9s ease-out;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.55))}
+.splat svg{width:100%;height:100%;display:block}
+
+/* ---------- 角色頭像與角色說明 ---------- */
+.cart{width:100%;height:auto;display:block;overflow:visible}
+.charcard .cart{width:64px;height:64px;margin:-2px 0 2px}
+.chardoc{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:11px;margin:6px 0 2px}
+.cdoc{display:flex;gap:13px;align-items:flex-start;text-align:left;cursor:pointer;color:var(--fg);font:inherit;
+  background:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.012));
+  border:1px solid var(--glassline);border-radius:var(--r-md);padding:13px 15px 14px;
+  transition:transform .12s,border-color .12s,background .12s}
+.cdoc:hover{transform:translateY(-2px);border-color:rgba(217,162,39,.55)}
+.cdoc.on{border-color:var(--accent);background:linear-gradient(160deg,rgba(217,162,39,.2),rgba(217,162,39,.04));box-shadow:var(--sh-1)}
+.cdoc-art{position:relative;flex:0 0 86px;width:86px}
+.cdoc-hp{position:absolute;right:-2px;bottom:-2px;font:800 11px var(--font-hud);color:#1a1300;
+  background:var(--accent);border-radius:999px;padding:2px 7px}
+.cdoc-txt{display:flex;flex-direction:column;gap:3px;min-width:0}
+.cdoc-txt b{font:800 17px var(--font-display);letter-spacing:.04em}
+.cdoc-txt .ct{font:600 11.5px var(--font-display);color:var(--dim)}
+.cdoc-txt p{margin:5px 0 6px;font:400 12.5px/1.6 var(--font-display);color:#b9c7bf}
+.cdoc-txt .cg,.cdoc-txt .cb{display:flex;gap:6px;font:600 12px/1.45 var(--font-display)}
+.cdoc-txt .cg{color:#8ee6a4}.cdoc-txt .cb{color:#ff9a86}
+.cdoc-txt .cg s,.cdoc-txt .cb s{text-decoration:none;flex:0 0 auto;opacity:.9}
+.cdoc-txt .cpick{margin-top:7px;font:700 11px var(--font-hud);letter-spacing:.1em;color:var(--dim)}
+.cdoc.on .cpick{color:var(--accent)}
 </style>
 
 <div id="game"></div>
 
 <div id="hud" hidden>
+  <div id="splats" class="hud"></div>
   <div id="vignette" class="hud"></div>
   <div id="bluefx" class="hud"></div>
   <div id="scope" class="hud" hidden>
@@ -454,41 +484,13 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       <p class="tag">噴屎、射尿、馬桶蓋爆頭。七種角色各有一個超強專長跟一個要命的毛病，八張地圖，最多百人同場。</p>
       <div class="cta">
         <button class="btn" id="goModes">開始遊戲</button>
+        <button class="btn ghost" id="goChars">角色說明</button>
         <button class="btn ghost" id="goHelp">操作說明</button>
         <button class="btn ghost" id="goNet">連線對戰</button>
         <button class="btn ghost" id="testSound">🔊 測試音效</button>
       </div>
       <p class="note" id="audioNote">音效狀態：尚未啟動（點任一按鈕即可開啟）</p>
 
-      <div class="guide">
-        <div class="gstep"><span><b>1</b>選角色</span><span><b>2</b>選玩法和地圖</span><span><b>3</b>開打</span></div>
-        <div class="gcols">
-          <div class="gcard">
-            <h4>🎯 這是什麼遊戲</h4>
-            <p>第一人稱射擊，<b>子彈是屎和尿</b>。一個人可以直接打 AI，也可以開房間跟朋友連線一起打。打倒對面、活到最後就贏。</p>
-          </div>
-          <div class="gcard">
-            <h4>🧍 先選角色（最重要）</h4>
-            <p>七個角色，每個都是<em>一個超強專長 + 一個要命的毛病</em>。<b>便祕大師</b>傷害翻倍但射速剩一半、<b>糞坦克</b>190 體力但走超慢、<b>尿急先生</b>跑超快但站著不動會漏尿扣血。在「戰場設定」那一頁選。</p>
-          </div>
-          <div class="gcard">
-            <h4>🔫 兩種彈藥</h4>
-            <p><b>棕色的是屎</b>——連發腸槍、噴屎霰彈、大腸機槍，粗、近距離很狠。<b>黃色的是尿</b>——狙擊尿柱、尿尿小槍，細、打得遠。近戰有<b>馬桶蓋</b>和<b>糞拳</b>，一下 120 傷害。</p>
-          </div>
-          <div class="gcard">
-            <h4>🏆 五種玩法</h4>
-            <p><b>吃屎</b>：100 人跳傘、縮圈，最後一坨生存。<br><b>團隊死鬥</b>：兩隊無限復活，先到目標分。<br><b>單挑</b>：1 對 1。<br><b>軍備競賽</b>：每把槍殺 5 人升級，先用馬桶蓋收尾者勝。<br><b>狙擊賽</b>：只有尿柱，死了就淘汰。</p>
-          </div>
-          <div class="gcard">
-            <h4>⌨️ 基本操作</h4>
-            <p><span class="kk">W</span><span class="kk">A</span><span class="kk">S</span><span class="kk">D</span> 移動 · 滑鼠轉視角 · 左鍵開火 · 右鍵瞄準 · <span class="kk">Shift</span> 衝刺 · <span class="kk">C</span> 蹲下 · <span class="kk">空白</span> 跳（可二段跳，對著矮牆會翻越）· <span class="kk">F</span> 撿東西、救隊友 · <span class="kk">R</span> 換料桶 · <span class="kk">1</span>～<span class="kk">4</span> 換武器 · <span class="kk">M</span> 大地圖 · <span class="kk">Esc</span> 暫停</p>
-          </div>
-          <div class="gcard">
-            <h4>👥 跟朋友一起玩</h4>
-            <p>一個人按<b>「連線對戰」→「建立房間」</b>拿到 4 碼代碼，其他人開<b>同一個網址</b>輸入代碼加入。房主選玩法，接著每個人各自挑席位和角色。一間房最多 12 人，其餘空位由 AI 補。</p>
-          </div>
-        </div>
-      </div>
       <div class="row" style="max-width:320px;margin:10px auto 0">
         <h3 style="justify-content:center">音量 <span id="volV">60%</span></h3>
         <input type="range" id="vol" min="0" max="1" step="0.05" value="0.6">
@@ -561,6 +563,14 @@ input[type=range]{width:100%;accent-color:var(--accent)}
         <button class="btn ghost" id="goHelp2">操作</button>
       </div>
       <p class="note" id="menuErr"></p>
+    </div>
+
+    <div id="scrChars" hidden>
+      <div class="eyebrow">七個病人 · 一個都不正常</div>
+      <h1 style="font-size:clamp(26px,5vw,42px)">角色說明</h1>
+      <p class="tag">每個角色都用一個很嚴重的毛病，換到一個很誇張的本事。沒有誰最強，只有誰比較適合你。</p>
+      <div class="chardoc" id="charDoc"></div>
+      <div class="cta"><button class="btn ghost" id="backFromChars">← 返回</button></div>
     </div>
 
     <div id="scrHelp" hidden>
@@ -715,44 +725,122 @@ function initAudio(){
 // any real interaction unlocks audio, whatever the browser's autoplay rules are
 ['pointerdown','mousedown','keydown','touchstart'].forEach(ev=>
   addEventListener(ev,()=>{ initAudio(); if(actx&&actx.state!=='running'&&actx.resume) actx.resume(); },{capture:true}));
-// per-gun voicing: crack (transient), body (filtered noise), thump (low sweep), tail (reverb send)
-const SHOT={
-  // 屎類：悶、濕、低頻多；尿類：細、高頻嘶嘶聲
-  poop:   {crack:1900,body:560,bodyQ:1.6,dur:.22,low:95,lowDur:.14,g:.6,tail:.3},
-  splat:  {crack:1300,body:320,bodyQ:1.1,dur:.4,low:58,lowDur:.26,g:.9,tail:.5},
-  stream: {crack:7400,body:3100,bodyQ:3.2,dur:.52,low:190,lowDur:.1,g:.62,tail:.6},
-  squirt: {crack:7800,body:3600,bodyQ:3.6,dur:.14,low:260,lowDur:.05,g:.46,tail:.2},
-  rifle:  {crack:5200,body:1500,bodyQ:1.1,dur:.16,low:150,lowDur:.1,g:.55,tail:.3},
-  pistol: {crack:6200,body:2100,bodyQ:1.3,dur:.11,low:210,lowDur:.07,g:.44,tail:.22},
-  shotgun:{crack:3600,body:780,bodyQ:.8,dur:.34,low:88,lowDur:.2,g:.85,tail:.45},
-  sniper: {crack:4200,body:980,bodyQ:.7,dur:.5,low:66,lowDur:.34,g:.9,tail:.75},
-  enemy:  {crack:2100,body:640,bodyQ:1.5,dur:.2,low:110,lowDur:.13,g:.55,tail:.35}
+// 這款遊戲沒有槍聲，只有放屁和噴水。每一種武器都是「一段抖動的低音 + 一陣濕噪音」。
+// f0→f1 是屁的音高滑落，buzz 是抖動速度（括約肌），nf 是噪音的濾波頻率。
+const WET={
+  poop:  {f0:118,f1:52, buzz:34,dur:.26,noise:.55,nf:1100,g:.62,tail:.25},   // 連發腸槍：短促的噗
+  splat: {f0:82, f1:30, buzz:21,dur:.5, noise:1,   nf:700, g:1,  tail:.5},   // 噴屎霰彈：一大團
+  big:   {f0:96, f1:40, buzz:28,dur:.3, noise:.7,  nf:900, g:.72,tail:.3},   // 大腸機槍
+  stream:{pee:1,dur:.55,nf:4600,g:.55,tail:.4},                              // 狙擊尿柱：長長一道
+  squirt:{pee:1,dur:.16,nf:6200,g:.42,tail:.18},                             // 尿尿小槍：滋一下
+  enemy: {f0:104,f1:46, buzz:30,dur:.26,noise:.6,  nf:950, g:.55,tail:.32},
 };
+WET.rifle=WET.poop; WET.pistol=WET.squirt; WET.shotgun=WET.splat; WET.sniper=WET.stream; WET.lmg=WET.big;
+function wetNoise(out,t,dur,freq,hp,amt,sweep){
+  const s0=actx.createBufferSource(); s0.buffer=noiseBuf; s0.playbackRate.value=.7+Math.random()*.6;
+  const f=actx.createBiquadFilter(); f.type=hp?'highpass':'lowpass'; f.Q.value=hp?.8:1.6;
+  f.frequency.setValueAtTime(freq,t);
+  f.frequency.exponentialRampToValueAtTime(Math.max(90,freq*(sweep==null?.35:sweep)),t+dur);
+  const g=actx.createGain();
+  g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(amt,t+.012);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  s0.connect(f); f.connect(g); g.connect(out); s0.start(t,Math.random()*.7); s0.stop(t+dur+.06);
+  return g;
+}
 function playShot(type,vol,pan,at){
   if(!actx||!master) return; audioStats.shots++; if(at) audioStats.spatial++;
-  const c=SHOT[type]||SHOT.rifle, t=actx.currentTime; vol=vol==null?1:vol;
+  const c=WET[type]||WET.poop, t=actx.currentTime; vol=vol==null?1:vol;
   let out=master;
   if(at) out=spatialNode(at.x,at.y+1.3,at.z,14,320);
   else if(actx.createStereoPanner){ const p=actx.createStereoPanner(); p.pan.value=clamp(pan||0,-1,1); p.connect(master); out=p; }
-  const det=.94+Math.random()*.12;                 // slight variation so repeat shots never sound identical
-  // 1. crack - very short high transient, this is what reads as "sharp"
-  const cr=actx.createBufferSource(); cr.buffer=noiseBuf; cr.playbackRate.value=1.4;
-  const chp=actx.createBiquadFilter(); chp.type='highpass'; chp.frequency.value=c.crack*det*.55;
-  const cg=actx.createGain(); cg.gain.setValueAtTime(c.g*vol*.9,t); cg.gain.exponentialRampToValueAtTime(.0001,t+.035);
-  cr.connect(chp); chp.connect(cg); cg.connect(out); cr.start(t,Math.random()*.6); cr.stop(t+.06);
-  // 2. body - band-passed noise sweeping down
-  const bs=actx.createBufferSource(); bs.buffer=noiseBuf;
-  const bp=actx.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=c.bodyQ;
-  bp.frequency.setValueAtTime(c.body*det,t); bp.frequency.exponentialRampToValueAtTime(Math.max(120,c.body*.22),t+c.dur);
-  const bg=actx.createGain(); bg.gain.setValueAtTime(c.g*vol,t); bg.gain.exponentialRampToValueAtTime(.0001,t+c.dur);
-  bs.connect(bp); bp.connect(bg); bg.connect(out); bs.start(t,Math.random()*.6); bs.stop(t+c.dur+.05);
-  // 3. thump - the punch
+  const det=.88+Math.random()*.24;
+  if(c.pee){
+    // 尿：一道細細的嘶聲，中間還有一點點水聲的顫
+    const ng=wetNoise(out,t,c.dur,c.nf*det,true,c.g*vol*.5,.45);
+    const o=actx.createOscillator(); o.type='sine';
+    o.frequency.setValueAtTime(1500*det,t);
+    o.frequency.exponentialRampToValueAtTime(820,t+c.dur);
+    const wob=actx.createOscillator(); wob.type='sine'; wob.frequency.value=23;
+    const wg=actx.createGain(); wg.gain.value=170; wob.connect(wg); wg.connect(o.frequency);
+    const og=actx.createGain(); og.gain.setValueAtTime(c.g*vol*.1,t);
+    og.gain.exponentialRampToValueAtTime(.0001,t+c.dur);
+    o.connect(og); og.connect(out); o.start(t); o.stop(t+c.dur+.05); wob.start(t); wob.stop(t+c.dur+.05);
+    if(verb&&c.tail){ const sg=actx.createGain(); sg.gain.value=c.tail*vol*.4; ng.connect(sg); sg.connect(verb); }
+    return;
+  }
+  // 屁：鋸齒波往下滑，再用一個低頻振盪器讓它抖
+  const o=actx.createOscillator(); o.type='sawtooth';
+  o.frequency.setValueAtTime(c.f0*det,t);
+  o.frequency.exponentialRampToValueAtTime(c.f1*det,t+c.dur);
+  const lfo=actx.createOscillator(); lfo.type='square';
+  lfo.frequency.setValueAtTime(c.buzz*(.8+Math.random()*.5),t);
+  lfo.frequency.exponentialRampToValueAtTime(c.buzz*.45,t+c.dur);
+  const lg=actx.createGain(); lg.gain.value=c.f0*.45; lfo.connect(lg); lg.connect(o.frequency);
+  const lp=actx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.setValueAtTime(1800,t);
+  lp.frequency.exponentialRampToValueAtTime(420,t+c.dur);
+  const og=actx.createGain();
+  og.gain.setValueAtTime(.0001,t); og.gain.exponentialRampToValueAtTime(c.g*vol,t+.014);
+  og.gain.exponentialRampToValueAtTime(.0001,t+c.dur);
+  o.connect(lp); lp.connect(og); og.connect(out);
+  o.start(t); o.stop(t+c.dur+.06); lfo.start(t); lfo.stop(t+c.dur+.06);
+  const ng=wetNoise(out,t,c.dur*.8,c.nf*det,false,c.g*vol*c.noise*.4);
+  if(verb&&c.tail){ const sg=actx.createGain(); sg.gain.value=c.tail*vol*.5; og.connect(sg); sg.connect(verb); }
+}
+// 打中人：一聲噗唧
+function sfxSquelch(head,at){
+  if(!actx||!master) return;
+  const t=actx.currentTime;
+  let out=master; if(at) out=spatialNode(at.x,at.y,at.z,10,120);
+  wetNoise(out,t,head?.2:.13,head?1500:900,false,head?.26:.17);
   const o=actx.createOscillator(); o.type='sine';
-  o.frequency.setValueAtTime(c.low*det,t); o.frequency.exponentialRampToValueAtTime(34,t+c.lowDur);
-  const og=actx.createGain(); og.gain.setValueAtTime(c.g*vol*.85,t); og.gain.exponentialRampToValueAtTime(.0001,t+c.lowDur);
-  o.connect(og); og.connect(out); o.start(t); o.stop(t+c.lowDur+.05);
-  // 4. tail into the room reverb
-  if(verb&&c.tail){ const sg=actx.createGain(); sg.gain.value=c.tail*vol*.5; bg.connect(sg); sg.connect(verb); }
+  o.frequency.setValueAtTime(head?420:260,t); o.frequency.exponentialRampToValueAtTime(head?90:70,t+.16);
+  const g=actx.createGain(); g.gain.setValueAtTime(head?.2:.13,t); g.gain.exponentialRampToValueAtTime(.0001,t+.17);
+  o.connect(g); g.connect(out); o.start(t); o.stop(t+.2);
+}
+// 自己被噴到：濕巴掌 + 一聲嫌棄的悶哼
+function sfxHurt(dmg){
+  if(!actx||!master) return;
+  const t=actx.currentTime, big=dmg>28;
+  wetNoise(master,t,big?.26:.16,big?700:1000,false,big?.3:.2);
+  const o=actx.createOscillator(); o.type='sawtooth';
+  o.frequency.setValueAtTime(big?210:260,t); o.frequency.exponentialRampToValueAtTime(90,t+.3);
+  const lp=actx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=900;
+  const g=actx.createGain(); g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(big?.17:.1,t+.03);
+  g.gain.exponentialRampToValueAtTime(.0001,t+.34);
+  o.connect(lp); lp.connect(g); g.connect(master); o.start(t); o.stop(t+.36);
+}
+// 換料桶 = 沖馬桶
+function sfxFlush(){
+  if(!actx||!master) return;
+  const t=actx.currentTime;
+  const s0=actx.createBufferSource(); s0.buffer=noiseBuf; s0.loop=true;
+  const bp=actx.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=1.1;
+  bp.frequency.setValueAtTime(2600,t); bp.frequency.exponentialRampToValueAtTime(380,t+1);
+  const g=actx.createGain();
+  g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.16,t+.12);
+  g.gain.setValueAtTime(.16,t+.6); g.gain.exponentialRampToValueAtTime(.0001,t+1.05);
+  s0.connect(bp); bp.connect(g); g.connect(master); s0.start(t); s0.stop(t+1.1);
+  // 咕嚕咕嚕的水
+  for(let i=0;i<5;i++){
+    const o=actx.createOscillator(); o.type='sine';
+    const tt=t+.14+i*.14;
+    o.frequency.setValueAtTime(140+Math.random()*120,tt);
+    o.frequency.exponentialRampToValueAtTime(70,tt+.1);
+    const og=actx.createGain(); og.gain.setValueAtTime(.07,tt); og.gain.exponentialRampToValueAtTime(.0001,tt+.12);
+    o.connect(og); og.connect(master); o.start(tt); o.stop(tt+.14);
+  }
+  if(verb){ const sg=actx.createGain(); sg.gain.value=.3; g.connect(sg); sg.connect(verb); }
+}
+// 撿東西、升級：一聲「噗通」
+function sfxPlop(up){
+  if(!actx||!master) return;
+  const t=actx.currentTime;
+  const o=actx.createOscillator(); o.type='sine';
+  o.frequency.setValueAtTime(up?180:420,t);
+  o.frequency.exponentialRampToValueAtTime(up?620:150,t+.14);
+  const g=actx.createGain(); g.gain.setValueAtTime(.16,t); g.gain.exponentialRampToValueAtTime(.0001,t+.16);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t+.18);
+  wetNoise(master,t,.1,1600,false,.07);
 }
 function beep(freq,dur,type,vol,slide){
   if(!actx||!master) return; const t=actx.currentTime; const o=actx.createOscillator(); o.type=type||'square';
@@ -908,7 +996,12 @@ function addBox(x,y,z,w,h,d,color,o){
   if(!o.nocollide) addCollider({minX:x-w/2,maxX:x+w/2,minY:y,maxY:y+h,minZ:z-d/2,maxZ:z+d/2,noRay:!!o.noRay,kind:o.kind||'',vis:!o.invisible});
   return m;
 }
-function addMesh(geo,color,x,y,z,sx,sy,sz,ry,o){ const m=new THREE.Mesh(geo,(o&&o.mat)||mat(color,o||{})); m.scale.set(sx,sy,sz); m.position.set(x,y,z); if(ry) m.rotation.y=ry; m.userData.st=1; worldRoot.add(m); return m; }
+function addMesh(geo,color,x,y,z,sx,sy,sz,ry,o){ o=o||{};
+  const m=new THREE.Mesh(geo,o.mat||mat(color,o)); m.scale.set(sx,sy,sz); m.position.set(x,y,z);
+  if(o.rx) m.rotation.x=o.rx; if(ry) m.rotation.y=ry; if(o.rz) m.rotation.z=o.rz;
+  m.userData.st=1; worldRoot.add(m);
+  if(o.collide){ const c=o.collide; addCollider({minX:c.minX,maxX:c.maxX,minY:c.minY||0,maxY:c.maxY,minZ:c.minZ,maxZ:c.maxZ,kind:'',vis:true}); }
+  return m; }
 function texCanvas(size,fn){ const c=document.createElement('canvas'); c.width=c.height=size; fn(c.getContext('2d'),size); return c; }
 const GROUND_SPAN=4200/1800;        // 地面變大了，貼圖重複次數要跟著變，不然每一格被拉大兩倍會糊掉
 const GROUND_PLANE=4200;
@@ -1126,6 +1219,32 @@ function crates(x,z){ const n=2+Math.floor(srand()*3);
 
 /* ---- 遠景與地被：地平線的山稜、地面色塊、草叢 ---- */
 const peakGeo=new THREE.ConeGeometry(1,1,5,1);
+// 經典的三層便便：遠景的山和地上的糞堆都用這一顆，整張圖一眼就看得出主題
+function mergeGeos(list){
+  // 先攤平成三角形列表再數頂點：indexed 的幾何攤開後頂點會變多
+  const flat=list.map(g=>{ if(!g.index) return g; const f=g.toNonIndexed(); g.dispose(); return f; });
+  let n=0; for(const g of flat) n+=g.attributes.position.count;
+  const pos=new Float32Array(n*3), nor=new Float32Array(n*3); let o=0;
+  for(const g of flat){
+    pos.set(g.attributes.position.array,o*3); nor.set(g.attributes.normal.array,o*3);
+    o+=g.attributes.position.count; g.dispose();
+  }
+  const bg=new THREE.BufferGeometry();
+  bg.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  bg.setAttribute('normal',new THREE.BufferAttribute(nor,3));
+  return bg;
+}
+const swirlGeo=(()=>{
+  const seg=(rb,rt,h,y)=>{ const g=new THREE.CylinderGeometry(rt,rb,h,10,1); g.translate(0,y,0); return g; };
+  const tip=new THREE.ConeGeometry(.15,.22,10,1); tip.translate(0,.45,0);
+  return mergeGeos([
+    seg(.50,.30,.28,-.36),    // 最下面一圈
+    seg(.46,.26,.24,-.10),    // 每一層的底都比下一層的頂寬很多 → 一圈一圈疊上去的屋簷
+    seg(.40,.21,.22,.13),
+    seg(.31,.14,.19,.34),
+    tip]);
+})();
+
 const slabGeo=new THREE.BoxGeometry(1,1,1);
 const tuftGeo=new THREE.ConeGeometry(.17,1,4,1,true);
 const hazeCol=(base,fog,t)=>new THREE.Color(base).lerp(new THREE.Color(fog),t).getHex();
@@ -1146,7 +1265,7 @@ function horizonRange(){
   const rock=sc.rock==null?cm.hemi[1]:sc.rock;
   const cols=[.5,.64,.76].map(t=>horizonMat(hazeCol(rock,cm.fogC,t)));
   const R0=Math.max(MAP*1.35+40,320);                     // 一定在地圖外面，又不會遠到看不見
-  const rings=sc.rings||3, hi=sc.tall?[.17,.33]:[.10,.21];
+  const rings=sc.rings||3, hi=sc.tall?[.2,.38]:[.13,.26];   // 天邊那幾坨要夠大才看得出是什麼
   for(let k=0;k<rings;k++){
     const col=cols[Math.min(cols.length-1,k)];
     const n=Math.round((sc.per||24)*(1+k*.5));
@@ -1155,10 +1274,10 @@ function horizonRange(){
       const r=Math.min(980,R0*(1+k*.55)*srnd(.94,1.1));
       const h=r*srnd(hi[0],hi[1]);                          // 高度 = 距離的一到三成，看起來才像山
       // rad 是山的水平半徑：不能超過距離的三成，也絕對不能伸進地圖裡
-      const rad=Math.min(r*.3,h*srnd(.45,.95),(r-MAP-20)*.85);
+      const rad=Math.min(r*.3,h*srnd(.5,.85),(r-MAP-20)*.85);
       if(rad<4) continue;
       if(sc.slab) addMesh(slabGeo,0,Math.cos(a)*r,h/2,Math.sin(a)*r,rad*1.4,h,rad*1.4,srand()*6,{mat:col});
-      else addMesh(peakGeo,0,Math.cos(a)*r,h/2-4,Math.sin(a)*r,rad,h,rad,srand()*6,{mat:col});
+      else addMesh(swirlGeo,0,Math.cos(a)*r,h/2-4,Math.sin(a)*r,rad*2,h,rad*2,srand()*6,{mat:col});
     }
   }
 }
@@ -1169,6 +1288,8 @@ let terrainMesh=null;
 const terrainMat=new THREE.MeshStandardMaterial({roughness:1,metalness:0,vertexColors:true});
 const terrainTex={};
 const SHADE={lush:[.86,1.03,.78],dry:[1.12,1.05,.86],dirt:[1.2,1.0,.74]};
+// 地面上洗不掉的那兩種顏色
+const STAIN=[.66,.5,.28], STAIN2=[.5,.36,.18];
 function groundDetail(){
   const cm=curMap, sc=cm.scenic||{};
   const sh=Object.assign({},SHADE,sc.shade||{});
@@ -1177,7 +1298,9 @@ function groundDetail(){
   const geo=new THREE.PlaneGeometry(span,span,S,S);
   geo.rotateX(-Math.PI/2);
   const W=S+1, N=W*W, col=new Float32Array(N*3);
-  for(let i=0;i<N;i++){ col[i*3]=1; col[i*3+1]=1; col[i*3+2]=1; }
+  // 這塊地早就髒了，底色先壓暗壓黃一點，再疊上污漬
+  const B=sc.clean?[1,1,1]:[.88,.83,.66];
+  for(let i=0;i<N;i++){ col[i*3]=B[0]; col[i*3+1]=B[1]; col[i*3+2]=B[2]; }
   const half=span/2, cell=span/S;
   const ix=x=>(x+half)/cell, iz=z=>(z+half)/cell;
   // 把一塊顏色蓋上去：中心最濃，往外平滑收掉
@@ -1206,6 +1329,13 @@ function groundDetail(){
     const r=srand()<.3?srnd(26,62):srnd(10,28);
     stamp(x,z,r,srand()<.5?sh.lush:sh.dry,srnd(.45,.95));
   }
+  // 滿地的污漬：這張圖被糟蹋過，地面自己就要說出來
+  const stains=Math.min(620,Math.round(60+MAP*MAP/110));
+  for(let i=0;i<stains;i++){
+    const x=srnd(-MAP,MAP), z=srnd(-MAP,MAP);
+    const big=srand()<.4;
+    stamp(x,z,big?srnd(18,48):srnd(2.2,8),srand()<.4?STAIN2:STAIN,big?srnd(.45,.85):srnd(.7,1));
+  }
   // 幾條被踩出來的土路，從地圖一側蜿蜒到另一側
   const tracks=sc.tracks==null?4:sc.tracks;
   for(let t=0;t<tracks;t++){
@@ -1233,8 +1363,8 @@ function groundDetail(){
   if(sc.grass===false||quality==='low') return;
   const pick=arr=>arr[Math.floor(srand()*arr.length)];
   // 草是「草」，不是立在地上的三角錐：葉片要細、要矮，而且顏色要比地面深一點
-  const tm=(sc.tuft||[0x5c7a33,0x4e6b29,0x688a3c]).map(scenicMat);
-  const nt=Math.min(quality==='high'?9000:5000,Math.round(MAP*MAP/11));
+  const tm=(sc.tuft||[0x5c7a33,0x6b5a23,0x6d4722,0x7a6a2c,0x53350f,0x4e6b29]).map(scenicMat);
+  const nt=Math.min(quality==='high'?5200:3000,Math.round(MAP*MAP/19));
   for(let i=0;i<nt;i++){
     const x=srnd(-MAP+2,MAP-2), z=srnd(-MAP+2,MAP-2);
     if(!isFree(x,z,1,1,0)) continue;
@@ -1841,28 +1971,76 @@ function clearWorld(){
     worldRoot.remove(o);
   }
 }
-// 每張圖都灑一點主題道具：路邊馬桶、地上糞堆
-const propGeo={}, THEME_PROPS=[];
+// 每張圖都要一眼看出是屎尿戰場：路邊馬桶、成堆的糞、衛生紙、通馬桶的吸把、污水坑
+const propGeo={}, THEME_PROPS=[], PILE_POS=[];
+const POOP_COLS=[0x6d4722,0x5a3a18,0x7c5226,0x4a2f12];
 function themeProps(){
   if(!propGeo.lid){
     propGeo.lid=new THREE.CylinderGeometry(.34,.34,.08,14);
-    propGeo.pile=new THREE.ConeGeometry(.5,.62,9);
     propGeo.seat=new THREE.TorusGeometry(.25,.075,6,14);
+    propGeo.roll=new THREE.CylinderGeometry(.17,.17,.22,12);
+    propGeo.core=new THREE.CylinderGeometry(.06,.06,.24,8);
+    propGeo.cup=new THREE.CylinderGeometry(.19,.13,.2,10);
+    propGeo.stick=new THREE.CylinderGeometry(.035,.035,.9,6);
+    propGeo.pool=new THREE.CylinderGeometry(1,1,.05,16);
   }
-  THEME_PROPS.length=0;
-  const toilets=Math.round(4+MAP/18), piles=Math.round(10+MAP/8);
+  THEME_PROPS.length=0; PILE_POS.length=0;
+  const k=MAP/110;
+  const toilets=Math.round(8+MAP/9), piles=Math.round(Math.min(1400,90+MAP*MAP/55)),
+        mounds=Math.round(12+MAP/9), rolls=Math.round(7+MAP/16),
+        plungers=Math.round(4+MAP/30), pools=Math.round(3+MAP/34);
+
+  // 路邊馬桶，有些裡面還有一坨
   for(let i=0;i<toilets;i++) place(1.6,1.8,1.4,(x,z)=>{
     THEME_PROPS.push([+x.toFixed(1),+z.toFixed(1)]);
-    addBox(x,0,z,.64,.62,.52,0xf3f0e7,{rough:.32});                       // 便座底座
-    addBox(x,0,z-.44,.6,1.02,.24,0xf3f0e7,{rough:.32});                   // 水箱
+    addBox(x,0,z,.64,.62,.52,0xf3f0e7,{rough:.32});
+    addBox(x,0,z-.44,.6,1.02,.24,0xf3f0e7,{rough:.32});
     addMesh(propGeo.seat,0xeae5d8,x,.64,z,1,1,1,0,{nocollide:true,rough:.3});
     addMesh(propGeo.lid,0xdcd6c6,x,.66,z-.3,1,1,1,0,{nocollide:true,rough:.3});
-    if(srand()<.6) addMesh(propGeo.pile,0x6d4722,x,.74,z,.42,.5,.42,srand()*6,{nocollide:true,rough:.95});
+    addBox(x+.22,1.02,z-.44,.1,.05,.14,0xb8b2a4,{nocollide:true,rough:.4,metal:.5});   // 沖水把手
+    if(srand()<.7) addMesh(swirlGeo,spick(POOP_COLS),x,.86,z,.5,.46,.5,srand()*6,{nocollide:true,rough:.95});
+  },50);
+
+  // 擋得住子彈的大糞堆：這才是這張圖真正的掩體
+  for(let i=0;i<mounds;i++) place(5,5,3,(x,z)=>{
+    const h=srnd(2.2,3.6), r=h*.5;
+    addMesh(swirlGeo,spick(POOP_COLS),x,h*.5,z,h,h,h,srand()*6,{rough:.95,
+      collide:{minX:x-r*.66,maxX:x+r*.66,minZ:z-r*.66,maxZ:z+r*.66,maxY:h*.75}});
+    for(let j=0;j<4;j++){
+      const a=srnd(0,6.28), d=r*srnd(1.1,1.9), sc=srnd(.5,1.1);
+      addMesh(swirlGeo,spick(POOP_COLS),x+Math.cos(a)*d,sc*.5,z+Math.sin(a)*d,sc,sc,sc,srand()*6,{nocollide:true,rough:.95});
+    }
   },40);
-  for(let i=0;i<piles;i++) place(1,1,.8,(x,z)=>{
-    const sc=srnd(.45,1.05);
-    addMesh(propGeo.pile,srand()<.5?0x6d4722:0x543515,x,sc*.28,z,sc,sc*.68,sc,srand()*6,{nocollide:true,rough:.95});
-  },30);
+
+  // 到處都是的小坨
+  for(let i=0;i<piles;i++) place(.8,.8,.3,(x,z)=>{
+    PILE_POS.push([+x.toFixed(1),+z.toFixed(1)]);
+    const sc=srand()<.3?srnd(1.7,3.3):srnd(.6,1.5);
+    addMesh(swirlGeo,spick(POOP_COLS),x,sc*.5,z,sc,sc,sc,srand()*6,{nocollide:true,rough:.95});
+    if(srand()<.45){ const s2=sc*srnd(.4,.7), a=srnd(0,6.28), dd=sc*srnd(.7,1.3);
+      addMesh(swirlGeo,spick(POOP_COLS),x+Math.cos(a)*dd,s2*.5,z+Math.sin(a)*dd,s2,s2,s2,srand()*6,{nocollide:true,rough:.95}); }
+  },34);
+
+  // 衛生紙捲，有的躺著有的立著
+  for(let i=0;i<rolls;i++) place(1,1,.6,(x,z)=>{
+    const lie=srand()<.6;
+    addMesh(propGeo.roll,0xf7f5ee,x,lie?.17:.11,z,1,1,1,0,{nocollide:true,rough:.8,rx:lie?Math.PI/2:0});
+    addMesh(propGeo.core,0xbca37a,x,lie?.17:.11,z,1,1,1,0,{nocollide:true,rough:.9,rx:lie?Math.PI/2:0});
+  },24);
+
+  // 插在地上的通馬桶吸把
+  for(let i=0;i<plungers;i++) place(1.2,1.2,.8,(x,z)=>{
+    const tl=srnd(-.3,.3);
+    addMesh(propGeo.stick,0x7a5428,x+tl*.4,.55,z,1,1,1,0,{nocollide:true,rough:.85,rz:tl});
+    addMesh(propGeo.cup,0xa8362a,x,.12,z,1,1,1,0,{nocollide:true,rough:.7});
+  },24);
+
+  // 污水坑：踩過去不會怎樣，但看起來很噁
+  for(let i=0;i<pools;i++) place(7,7,4,(x,z)=>{
+    const r=srnd(2.2,4.2);
+    addMesh(propGeo.pool,0x4e4426,x,.04,z,r,1,r*srnd(.7,1.1),srand()*6,{nocollide:true,rough:.25,metal:.2});
+    addMesh(propGeo.pool,0x6a5c30,x,.055,z,r*.6,1,r*.55,srand()*6,{nocollide:true,rough:.18,metal:.25});
+  },34);
 }
 function buildMap(id,sizeMul){
   const m=MAPS.find(x=>x.id===id)||MAPS[0]; curMap=m;
@@ -2131,6 +2309,86 @@ function puff(p,color,n,speed){
     const m=new THREE.Mesh(partGeo,mat); m.position.copy(p); scene.add(m);
     particles.push({m,v:new THREE.Vector3(rand(-1,1),rand(.3,1.6),rand(-1,1)).multiplyScalar(speed||2.5),life:rand(.25,.5)}); }
 }
+
+/* ========== 會飛的大便 ========== */
+// 傷害還是即時判定，但畫面上真的有一坨翻滾著飛過去
+const poopGeo=new THREE.SphereGeometry(.085,7,5);
+const poopNub=new THREE.SphereGeometry(.055,6,4);
+const peeGeo=new THREE.SphereGeometry(.05,6,4);
+const poopFlyMat=[0x6d4722,0x5a3a18,0x7c5226].map(c=>{
+  const m=new THREE.MeshStandardMaterial({color:c,roughness:.85,metalness:.02}); m.color.convertSRGBToLinear(); return m; });
+const peeFlyMat=(()=>{ const m=new THREE.MeshStandardMaterial({color:0xf2d23a,roughness:.25,metalness:0,
+  emissive:new THREE.Color(0x4a3c00),transparent:true,opacity:.92}); m.color.convertSRGBToLinear(); return m; })();
+const flying=[];
+function lob(from,to,kind,n){
+  if(flying.length>110) return;
+  const pee=kind==='pee';
+  const dist=from.distanceTo(to), speed=pee?300:190;
+  n=n||(pee?3:1);
+  for(let i=0;i<n;i++){
+    let m;
+    if(pee) m=new THREE.Mesh(peeGeo,peeFlyMat);
+    else {
+      m=new THREE.Group();
+      const mat=poopFlyMat[(Math.random()*3)|0];
+      const a=new THREE.Mesh(poopGeo,mat); m.add(a);
+      const b=new THREE.Mesh(poopNub,mat); b.position.set(rand(-.07,.07),.09,rand(-.05,.05)); m.add(b);
+      const c=new THREE.Mesh(poopNub,mat); c.position.set(rand(-.06,.06),-.08,rand(-.06,.06)); c.scale.setScalar(.8); m.add(c);
+    }
+    const sc=pee?rand(.7,1.25):rand(.85,1.45);
+    m.scale.set(sc,sc*(pee?rand(1.2,2.2):rand(.85,1.2)),sc);
+    m.position.copy(from); scene.add(m);
+    flying.push({m,ax:from.x,ay:from.y,az:from.z,bx:to.x,by:to.y,bz:to.z,
+      t:-i*.014,dur:Math.max(.045,dist/speed),pee,
+      sx:rand(-16,16),sy:rand(-16,16),
+      ox:pee?rand(-.14,.14):rand(-.1,.1),oy:pee?rand(-.1,.1):rand(-.08,.08)});
+  }
+}
+function updateFlying(dt){
+  for(let i=flying.length-1;i>=0;i--){
+    const f=flying[i]; f.t+=dt;
+    if(f.t<0) continue;
+    const k=f.t/f.dur;
+    if(k>=1){
+      scene.remove(f.m);
+      puff(new THREE.Vector3(f.bx,f.by,f.bz),f.pee?0xe8c93a:0x6b4a1e,f.pee?3:5,f.pee?1.6:2.4);
+      flying.splice(i,1); continue;
+    }
+    // 一點點拋物線和側偏，看起來才像被扔出去的
+    const sag=Math.sin(k*Math.PI)*(f.pee?.26:.5)*f.dur*6;
+    f.m.position.set(f.ax+(f.bx-f.ax)*k+f.ox*k, f.ay+(f.by-f.ay)*k-sag+f.oy*k, f.az+(f.bz-f.az)*k);
+    f.m.rotation.x+=f.sx*dt; f.m.rotation.z+=f.sy*dt;
+  }
+}
+function clearFlying(){ for(const f of flying) scene.remove(f.m); flying.length=0; }
+
+/* ========== 被打到：畫面上糊一坨 ========== */
+const SPLAT_SHAPES=[
+  'M52 8c14 0 23 10 28 21 5 10 16 12 16 24 0 13-9 20-20 25-10 5-12 14-24 14-13 0-19-8-30-13C11 74 2 68 2 54c0-13 9-18 15-28C23 15 36 8 52 8z',
+  'M50 4c12 2 15 14 24 20 9 6 22 6 22 20 0 12-11 16-18 24-8 9-8 24-22 24-13 0-17-11-27-17C18 69 4 66 4 52c0-12 11-17 17-26C27 17 36 2 50 4z',
+  'M48 6c16-2 20 13 30 20 9 6 20 9 20 21 0 14-13 17-21 25-8 7-10 20-23 20-14 0-18-12-28-19C16 67 5 64 5 50c0-13 12-16 19-25C31 16 34 8 48 6z'
+];
+function screenSplat(n,big){
+  const wrap=$('splats'); if(!wrap) return;
+  for(let i=0;i<n;i++){
+    const d=document.createElement('div'); d.className='splat';
+    const sz=(big?130:70)*rand(.6,1.5);
+    const cx=rand(6,94), cy=rand(8,88);
+    const sh=SPLAT_SHAPES[(Math.random()*SPLAT_SHAPES.length)|0];
+    const tone=['#5d3c17','#6d4722','#4a2f12'][(Math.random()*3)|0];
+    d.style.cssText=`left:${cx}%;top:${cy}%;width:${sz}px;height:${sz}px;margin:${-sz/2}px 0 0 ${-sz/2}px;transform:rotate(${rand(0,360)}deg)`;
+    d.innerHTML=`<svg viewBox="0 0 100 100"><path d="${sh}" fill="${tone}"/>`+
+      `<circle cx="${rand(6,22)}" cy="${rand(10,30)}" r="${rand(3,8)}" fill="${tone}"/>`+
+      `<circle cx="${rand(78,96)}" cy="${rand(62,90)}" r="${rand(3,9)}" fill="${tone}"/>`+
+      `<circle cx="${rand(70,92)}" cy="${rand(8,26)}" r="${rand(2,6)}" fill="${tone}"/></svg>`;
+    wrap.appendChild(d);
+    const life=big?5200:3400;
+    setTimeout(()=>{ d.style.opacity='0'; },life-900);
+    setTimeout(()=>d.remove(),life);
+  }
+  while(wrap.children.length>26) wrap.firstChild.remove();
+}
+function clearSplats(){ const w=$('splats'); if(w) w.innerHTML=''; }
 let lootCullT=0;
 const holeGeo=new THREE.PlaneGeometry(.22,.22);
 const holeMat=new THREE.MeshBasicMaterial({color:0x4a3414,transparent:true,opacity:.78,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2});
@@ -2300,19 +2558,19 @@ $('slots').innerHTML=WEAPONS.map((w,i)=>w.fists?'':`<li data-i="${i}">${i+1} ${w
 
 /* ================= 角色：一個超強專長 + 一個要命的毛病 ================= */
 const CHARS=[
-  {id:'norm',emo:'\ud83e\uddcd',name:'一般人',tag:'腸胃健康，沒什麼故事',
+  {id:'norm',story:'腸胃好得不得了，被徵召的時候正在吃早餐。他唯一的特技是沒有特技。',emo:'\ud83e\uddcd',name:'一般人',tag:'腸胃健康，沒什麼故事',
    good:'樣樣標準，沒有弱點',bad:'也沒有任何強項',hp:100},
-  {id:'jet',emo:'\ud83d\udca8',name:'噴射狂',tag:'腸胃炎第三天',
+  {id:'jet',story:'第三天了，還是沒停。他已經放棄治療，開始把它當推進器用。',emo:'\ud83d\udca8',name:'噴射狂',tag:'腸胃炎第三天',
    good:'射速 +50%、跑得更快',bad:'體力只有 70，一碰就倒',hp:70,rate:.66,spd:1.14},
-  {id:'jam',emo:'\ud83d\ude24',name:'便祕大師',tag:'憋了整整三個月',
+  {id:'jam',story:'上一次是三個月前。那股壓力沒有地方去，只好全部灌進槍管裡。',emo:'\ud83d\ude24',name:'便祕大師',tag:'憋了整整三個月',
    good:'傷害 ×2.1、體力 125',bad:'射速只剩一半，擠不出來',hp:125,rate:1.9,dmg:2.1},
-  {id:'rush',emo:'\ud83c\udfc3',name:'尿急先生',tag:'廁所還有五百公尺',
+  {id:'rush',story:'從出門那一刻就在找廁所。只要停下來超過一秒，褲子就會先投降。',emo:'\ud83c\udfc3',name:'尿急先生',tag:'廁所還有五百公尺',
    good:'移動 +42%，誰都追不到',bad:'站著不動就漏，每秒扣 3.4 體力',hp:85,spd:1.42,leak:3.4},
-  {id:'tank',emo:'\ud83d\udee1\ufe0f',name:'糞坦克',tag:'三十年滷肉飯養出來的',
+  {id:'tank',story:'三十年的滷肉飯養出一身裝甲。他不閃也不躲，因為他也躲不掉。',emo:'\ud83d\udee1\ufe0f',name:'糞坦克',tag:'三十年滷肉飯養出來的',
    good:'體力 190、受傷 −25%',bad:'走得很慢，腰射散到外太空',hp:190,spd:.7,take:.75,spread:1.7},
-  {id:'lid',emo:'\ud83d\udebd',name:'馬桶騎士',tag:'盾牌就是馬桶蓋',
+  {id:'lid',story:'家裡的馬桶蓋被他拆下來當盾牌。他說這叫就地取材，鄰居說這叫沒水準。',emo:'\ud83d\udebd',name:'馬桶騎士',tag:'盾牌就是馬桶蓋',
    good:'蹲下時受傷 −70%，正面硬吃',bad:'移動 −18%、跳不高',hp:110,spd:.82,jump:.78,crouchArmor:.3},
-  {id:'eat',emo:'\ud83d\ude0b',name:'食糞者',tag:'別問，問就是香',
+  {id:'eat',story:'沒有人問過他為什麼。大家都怕他回答。',emo:'\ud83d\ude0b',name:'食糞者',tag:'別問，問就是香',
    good:'每擊殺回 35 體力，越殺越勇',bad:'體力 75、傷害 −10%',hp:75,dmg:.9,killHeal:35},
 ];
 let CH=CHARS[0];
@@ -2333,7 +2591,7 @@ function charKill(){
   if(!CH.killHeal||!P.alive||P.down) return;
   if(P.hp>=maxHp()) return;
   P.hp=Math.min(maxHp(),P.hp+CH.killHeal);
-  toast('吃了一口，回 '+CH.killHeal+' 體力',1100); beep(540,.14,'sine',.12,760);
+  toast('吃了一口，回 '+CH.killHeal+' 體力',1100); sfxPlop(true);
 }
 /* ================= Player ================= */
 const P={pos:new THREE.Vector3(),vel:new THREE.Vector3(),vy:0,onGround:true,yaw:0,pitch:0,hp:100,armor:0,helmet:0,bag:[],crouch:false,eyeH:1.65,alive:true,sprint:false,
@@ -2405,12 +2663,12 @@ function updateSlots(){
 function startReload(){
   if(curW<0) return; const w=WEAPONS[curW]; if(w.melee) return;
   if(reloadT>0||w.mag>=w.magSize||w.res<=0) return;
-  reloadT=w.reload; aiming=false; mechSound('reload');
+  reloadT=w.reload; aiming=false; sfxFlush();
 }
 function finishReload(){
   const w=WEAPONS[curW]; if(!w) return;
   const need=Math.min(w.magSize-w.mag,w.res); w.mag+=need; w.res-=need;
-  mechSound('bolt');
+  sfxPlop(true);
 }
 
 function currentSpread(){
@@ -2445,8 +2703,8 @@ function melee(){
       hitAny=true; head=part==='head'; endPoint=h.point; puff(h.point,0x6b4a1e,7,2.4);
     } else if(env&&env.t<w.range&&!endPoint) endPoint=o.clone().addScaledVector(_d,env.t);
   }
-  if(hitAny){ stats.hits++; showHit(killed,head); if(killed) charKill(); playShot('splat',.5,0); beep(220,.12,'square',.14,90); }
-  else { beep(140,.09,'sine',.05,70); if(endPoint) puff(endPoint,0x9c968a,3,1.6); }
+  if(hitAny){ stats.hits++; showHit(killed,head); if(killed) charKill(); playShot('splat',.5,0); sfxSquelch(head); }
+  else { wetNoise&&actx&&wetNoise(master,actx.currentTime,.1,700,false,.05); if(endPoint) puff(endPoint,0x9c968a,3,1.6); }
   P.pitch=clamp(P.pitch+.012,-1.52,1.52);
   hearShot(P,18);
 }
@@ -2454,7 +2712,7 @@ function fire(){
   const w=WEAPONS[curW]; if(!w) return;
   if(w.melee){ melee(); return; }
   if(w.mag<=0){
-    shotT=.25; beep(140,.05,'square',.05);
+    shotT=.25; sfxPlop(false);
     if(w.res>0){ startReload(); return; }
     const alt=WEAPONS.findIndex(x=>x.have&&(x.mag>0||x.res>0));
     if(alt>=0&&alt!==curW){ switchWeapon(alt); toast('換成還有料的槍',1300); }
@@ -2479,8 +2737,9 @@ function fire(){
     } else if(env){ end=o.clone().addScaledVector(_d,env.t); puff(end,env.normal.y>.5&&end.y<.05?0x6a5a3c:0x9c968a,3,2); bulletHole(end,env.normal); }
     else end=o.clone().addScaledVector(_d,Math.min(w.range,260));
     if(i<4) tracer(mw,end,false,w.ammo);
+    if(i<6) lob(mw,end,w.ammo);
   }
-  if(hitAny){ stats.hits++; showHit(killed,head); if(killed) charKill(); beep(head?2100:1500,head?.12:.05,head?'triangle':'square',head?.16:.07); }
+  if(hitAny){ stats.hits++; showHit(killed,head); if(killed) charKill(); sfxSquelch(head); }
   const rc=w.recoil*(adsT>.8?.6:1)*(P.crouch?.75:1);
   P.pitch=clamp(P.pitch+rc*rand(.75,1.05),-1.52,1.52); P.yaw+=rand(-1,1)*rc*.35;
   if(w.auto) bloom=Math.min(bloom+.0045,.035);
@@ -2603,20 +2862,107 @@ function partsGeo(parts){
   bg.setAttribute('color',new THREE.BufferAttribute(col,3));
   return bg;
 }
+
+/* ========== 每個角色長得完全不一樣 ========== */
+// 在基礎身體零件上動手腳：刪掉、換色、加東西
+const pFind=(T,id)=>T.find(p=>p.id===id);
+const pRm=(T,...ids)=>{ for(const id of ids){ const i=T.findIndex(p=>p.id===id); if(i>=0) T.splice(i,1); } };
+const pCol=(T,id,c)=>{ const p=pFind(T,id); if(p) p.c=c; };
+const pScale=(T,id,sx,sy,sz)=>{ const p=pFind(T,id); if(!p) return;
+  p.sx=(p.sx==null?1:p.sx)*sx; p.sy=(p.sy==null?1:p.sy)*sy; p.sz=(p.sz==null?1:p.sz)*sz; };
+const SICK=0x9ec48a, FLUSH=0xd8705a, POO=0x6d4722, POO2=0x53350f, PEE=0xf0d44a, PORC=0xf3f0e7;
+const CHARVIS={
+  // 一般人：就是個普通可憐人，什麼都沒有
+  norm(T){},
+  // 噴射狂：臉發青、頭綁布條、屁股後面兩根噴射管
+  jet(T){
+    pRm(T,'helmet','rim','visor','pack');
+    pCol(T,'head',SICK); pCol(T,'jaw',SICK);
+    pScale(T,'chest',.82,1,.82);                                   // 瘦得只剩一把骨頭
+    T.push({k:'sph',r:.165,x:0,y:1.9,z:0,sy:.5,sz:1.02,c:0x5f8a48});       // 綠頭巾
+    T.push({w:.06,h:.05,d:.1,x:-.13,y:1.9,z:-.16,c:0x5f8a48});
+    T.push({k:'cyl',r:.055,r2:.1,h:.26,x:-.13,y:.98,z:-.3,rx:1.15,c:POO2}); // 噴射管
+    T.push({k:'cyl',r:.055,r2:.1,h:.26,x:.13,y:.98,z:-.3,rx:1.15,c:POO2});
+    T.push({k:'sph',r:.085,x:-.13,y:.9,z:-.44,c:POO});                      // 剛噴完留下的
+    T.push({k:'sph',r:.085,x:.13,y:.9,z:-.44,c:POO});
+  },
+  // 便祕大師：巨肚、滿臉通紅、頭上青筋、憋到發抖
+  jam(T){
+    pRm(T,'helmet','rim','visor','vest','pack');
+    pCol(T,'head',FLUSH); pCol(T,'jaw',FLUSH);
+    T.push({k:'sph',r:.33,x:0,y:1.22,z:.1,sy:.95,c:0xc8785e});              // 爆開的肚子
+    T.push({k:'sph',r:.17,x:0,y:1.88,z:0,sy:.42,sz:1.02,c:0x8a3d2c});       // 脹紅的頭皮
+    T.push({w:.03,h:.11,d:.03,x:-.1,y:1.9,z:.1,rz:.4,c:0x7a2b22});          // 青筋
+    T.push({w:.03,h:.11,d:.03,x:.1,y:1.9,z:.1,rz:-.4,c:0x7a2b22});
+    T.push({w:.1,h:.035,d:.04,x:-.06,y:1.86,z:.14,rz:-.5,c:0x3a1a14});      // 皺到不行的眉毛
+    T.push({w:.1,h:.035,d:.04,x:.06,y:1.86,z:.14,rz:.5,c:0x3a1a14});
+  },
+  // 尿急先生：亮黃雨衣、夾緊的腿、腳邊一灘
+  rush(T){
+    pRm(T,'helmet','rim','visor','pack');
+    pCol(T,'chest',PEE); pCol(T,'vest',0xd8bb2c);
+    T.push({k:'sph',r:.175,x:0,y:1.88,z:0,sy:.72,sz:1.04,c:PEE});           // 黃色帽兜
+    T.push({k:'cyl',r:.09,r2:.03,h:.2,x:0,y:1.05,z:.26,rx:1.3,c:0xe8c93a}); // 忍不住的水柱
+    T.push({k:'cyl',r:.3,r2:.3,h:.03,x:0,y:.03,z:.35,c:0xd9c84e});          // 腳邊一灘
+    T.push({w:.07,h:.07,d:.05,x:-.05,y:1.87,z:.145,c:0x1b1b1b});            // 瞪大的眼睛
+    T.push({w:.07,h:.07,d:.05,x:.05,y:1.87,z:.145,c:0x1b1b1b});
+  },
+  // 糞坦克：整個人大一號，渾身棕色，肩上兩坨
+  tank(T){
+    pRm(T,'helmet','rim','visor');
+    pCol(T,'chest',POO); pCol(T,'vest',POO2); pCol(T,'pack',POO2);
+    pScale(T,'chest',1.5,1.1,1.5); pScale(T,'vest',1.45,1.15,1.4);
+    T.push({k:'sph',r:.42,x:0,y:1.3,z:0,sy:.95,c:POO});                     // 巨大的身軀
+    T.push({k:'sph',r:.2,x:-.4,y:1.66,z:0,c:POO2});                         // 肩上兩坨
+    T.push({k:'sph',r:.2,x:.4,y:1.66,z:0,c:POO2});
+    T.push({k:'cyl',r:.2,r2:.02,h:.26,x:0,y:2.02,z:0,c:POO2});              // 頭頂尖尖
+    pCol(T,'head',0x8a6436); pCol(T,'jaw',0x8a6436);
+  },
+  // 馬桶騎士：頭戴馬桶蓋、胸前一塊陶瓷、背著水箱
+  lid(T){
+    pRm(T,'helmet','rim','visor');
+    pCol(T,'vest',PORC); pCol(T,'pack',PORC);
+    T.push({k:'cyl',r:.27,r2:.27,h:.05,x:0,y:2.02,z:-.02,c:PORC});          // 馬桶蓋
+    T.push({k:'cyl',r:.2,r2:.2,h:.06,x:0,y:1.96,z:-.02,c:0xdcd6c6});        // 底下的座圈
+    T.push({w:.05,h:.12,d:.05,x:0,y:2.08,z:-.24,c:0xb8b2a4});               // 蓋子的鉸鍊
+    T.push({k:'cyl',r:.055,h:.14,x:.2,y:1.52,z:-.26,c:0xb8b2a4});           // 沖水把手
+    T.push({w:.1,h:.05,d:.05,x:0,y:1.845,z:.15,c:0x12161a});                // 從蓋子下面看出來
+  },
+  // 食糞者：滿嘴棕、手上捧一坨、衣服也髒
+  eat(T){
+    pRm(T,'helmet','rim','visor','vest','pack');
+    pCol(T,'chest',0x6b6250);
+    T.push({k:'sph',r:.12,x:0,y:1.77,z:.11,sy:.7,c:POO});                   // 吃得滿嘴
+    T.push({k:'sph',r:.075,x:-.05,y:1.88,z:.14,sz:.5,c:0xf2f2ea});          // 瞇成一條線的開心眼
+    T.push({k:'sph',r:.075,x:.05,y:1.88,z:.14,sz:.5,c:0xf2f2ea});
+    T.push({k:'cyl',r:.16,r2:.05,h:.24,x:0,y:1.14,z:.3,c:POO});             // 捧在手上的那一坨
+    T.push({k:'sph',r:.09,x:0,y:1.3,z:.3,c:POO2});
+    T.push({k:'sph',r:.07,x:-.2,y:1.44,z:.1,c:POO2});                       // 身上的污漬
+    T.push({k:'sph',r:.06,x:.17,y:1.2,z:.12,c:POO2});
+  },
+};
+const CHAR_IDS=CHARS.map(c=>c.id);
+// 名字 → 固定的角色，所有人看到的同一個 bot 都長一樣
+function charForName(name){
+  let h=0; for(let i=0;i<name.length;i++) h=(h*31+name.charCodeAt(i))>>>0;
+  return CHAR_IDS[h%CHAR_IDS.length];
+}
 const bodyMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.9,metalness:.06});
 const gearMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.5,metalness:.45});
 const hitMat=new THREE.MeshBasicMaterial({visible:false});
 const BOT_GEO={};
-function botGeo(team){
-  if(BOT_GEO[team]) return BOT_GEO[team];
+function botGeo(team,ch){
+  ch=CHARVIS[ch]?ch:'norm';
+  const key=team+'|'+ch;
+  if(BOT_GEO[key]) return BOT_GEO[key];
   const cloth=TEAM_CLOTH[team], dim=shade(cloth,-.12), dark=0x23272b, skin=0xcf9e7b, boot=0x1a1c1e,
         vest=team===0?0x253c52:shade(cloth,-.26), pouch=shade(vest,-.08), pack=shade(vest,-.05),
         strap=0x2e3237, band=team===0?0x3fe0c5:shade(cloth,.22), glove=0x2a2a24;
   // rounded limbs and ball joints, every piece overlapping its neighbour so no seams open up when animated
-  const torso=partsGeo([
+  const T=[
     {k:'cyl',r:.21,r2:.2,h:.34,x:0,y:.98,z:0,sz:.78,c:dim},                     // hips
-    {k:'cyl',r:.23,r2:.26,h:.52,x:0,y:1.36,z:0,sz:.72,c:cloth},                 // chest
-    {w:.5,h:.42,d:.34,x:0,y:1.35,z:0,c:vest},                                   // plate carrier
+    {k:'cyl',r:.23,r2:.26,h:.52,x:0,y:1.36,z:0,sz:.72,c:cloth,id:'chest'},                 // chest
+    {w:.5,h:.42,d:.34,x:0,y:1.35,z:0,c:vest,id:'vest'},                                   // plate carrier
     {k:'sph',r:.14,x:0,y:1.6,z:0,sx:1.7,sy:.75,sz:1.25,c:dim},                  // yoke over the shoulders
     {k:'sph',r:.125,x:-.27,y:1.56,z:0,c:dim},                                   // shoulder caps
     {k:'sph',r:.125,x:.27,y:1.56,z:0,c:dim},
@@ -2625,18 +2971,20 @@ function botGeo(team){
     {w:.12,h:.12,d:.08,x:.18,y:1.2,z:.17,c:pouch},
     {w:.08,h:.4,d:.03,x:-.14,y:1.46,z:.17,c:strap},
     {w:.08,h:.4,d:.03,x:.14,y:1.46,z:.17,c:strap},
-    {w:.36,h:.4,d:.2,x:0,y:1.34,z:-.24,c:pack},                                 // backpack
+    {w:.36,h:.4,d:.2,x:0,y:1.34,z:-.24,c:pack,id:'pack'},                                 // backpack
     {k:'cyl',r:.14,h:.16,x:0,y:1.12,z:-.24,sz:.8,c:shade(pack,-.08)},
     {k:'cyl',r:.085,h:.16,x:0,y:1.68,z:0,c:skin},                               // neck
-    {k:'sph',r:.148,x:0,y:1.84,z:0,sz:1.08,c:skin},                             // head
-    {w:.17,h:.11,d:.1,x:0,y:1.79,z:.11,c:shade(skin,-.05)},                     // jaw
-    {k:'sph',r:.168,x:0,y:1.86,z:0,sy:.9,sz:1.06,c:dark},                       // helmet
-    {k:'cyl',r:.178,r2:.175,h:.05,x:0,y:1.79,z:0,sz:1.06,c:shade(dark,.07)},    // helmet rim
-    {w:.19,h:.07,d:.06,x:0,y:1.845,z:.14,c:0x12161a},                           // visor
+    {k:'sph',r:.148,x:0,y:1.84,z:0,sz:1.08,c:skin,id:'head'},                             // head
+    {w:.17,h:.11,d:.1,x:0,y:1.79,z:.11,c:shade(skin,-.05),id:'jaw'},                     // jaw
+    {k:'sph',r:.168,x:0,y:1.86,z:0,sy:.9,sz:1.06,c:dark,id:'helmet'},                       // helmet
+    {k:'cyl',r:.178,r2:.175,h:.05,x:0,y:1.79,z:0,sz:1.06,c:shade(dark,.07),id:'rim'},    // helmet rim
+    {w:.19,h:.07,d:.06,x:0,y:1.845,z:.14,c:0x12161a,id:'visor'},                           // visor
     {k:'sph',r:.058,x:-.155,y:1.84,z:0,c:0x2b2f33},                             // headset cups
     {k:'sph',r:.058,x:.155,y:1.84,z:0,c:0x2b2f33},
     {w:.03,h:.03,d:.12,x:-.12,y:1.8,z:.08,c:0x2b2f33},                          // mic boom
-  ]);
+  ];
+  CHARVIS[ch](T);
+  const torso=partsGeo(T);
   const leg=partsGeo([
     {k:'sph',r:.115,x:0,y:0,z:0,c:dim},                                         // hip joint
     {k:'cyl',r:.105,r2:.093,h:.52,x:0,y:-.26,z:0,c:dim},                        // thigh
@@ -2660,7 +3008,7 @@ function botGeo(team){
     {w:.05,h:.08,d:.18,x:0,y:-.02,z:-.22,c:0x3a3022},
     {w:.05,h:.05,d:.12,x:0,y:.08,z:.04,c:0x15181a},
   ]);
-  return BOT_GEO[team]={torso,leg,arm,gun};
+  return BOT_GEO[key]={torso,leg,arm,gun};
 }
 class Bot{
   constructor(x,z,name,team,idx){
@@ -2677,14 +3025,15 @@ class Bot{
     this.ft=idx%3; this.lane=[-1,1,0][this.ft]; this.aggroPick=idx%3; this.prey=null; this.preyT=0; this.laneT=rand(10,20);
     this.vault=null; this.vaultCd=0; this.roleT=rand(4,20); this.holdPt=null; this.stepT=rand(0,2);
     this.retreatT=-1; this.healSeek=false; this.down=false; this.downHp=0; this.reviveT=0; this.reviveT2=0; this.reviveTarget=null; this.lastHitBy=null;
+    this.charId=charForName(name+'#'+team);      // 名字決定長相，每台電腦看到的同一個人都一樣
     const a=idx*2.2+.6; this.off=new THREE.Vector3(Math.cos(a)*3.5,0,Math.sin(a)*3.5);
     this.build();
   }
   build(){
     const g=new THREE.Group(); g.rotation.order='YXZ'; this.group=g; this.hitboxes=[];
-    const G=botGeo(this.team);
+    const G=botGeo(this.team,this.charId);
     const add=(geo,material,x,y,z,parent)=>{ const m=new THREE.Mesh(geo,material); m.position.set(x,y,z); m.castShadow=true; (parent||g).add(m); return m; };
-    this.torso=add(G.torso,bodyMat,0,0,0);
+    this.mTorso=this.torso=add(G.torso,bodyMat,0,0,0);
     this.legL=new THREE.Group(); this.legL.position.set(-.13,.95,0); g.add(this.legL); add(G.leg,bodyMat,0,0,0,this.legL);
     this.legR=new THREE.Group(); this.legR.position.set(.13,.95,0); g.add(this.legR); add(G.leg,bodyMat,0,0,0,this.legR);
     this.armR=new THREE.Group(); this.armR.position.set(.33,1.56,0); g.add(this.armR); add(G.arm,bodyMat,0,0,0,this.armR);
@@ -2697,6 +3046,12 @@ class Bot{
     this.flash=new THREE.Sprite(enemyFlashMat); this.flash.scale.set(.75,.75,.75); this.flash.visible=false; this.muzzle.add(this.flash);
     if(this.team===0){ this.tag=nameTag(this.name); g.add(this.tag); }
     g.position.copy(this.pos); scene.add(g);
+  }
+  // 換角色長相：幾何體有快取，換過去就好
+  setChar(id){
+    if(!id||id===this.charId||!CHARVIS[id]) return;
+    this.charId=id;
+    if(this.mTorso) this.mTorso.geometry=botGeo(this.team,id).torso;
   }
   head(){ return new THREE.Vector3(this.pos.x,this.pos.y+1.6,this.pos.z); }
   // a remote player / remote bot: smooth toward the last state we were sent, animate from its speed
@@ -2890,7 +3245,7 @@ class Bot{
     camera.getWorldDirection(_fwd); const lx=this.pos.x-camera.position.x, lz=this.pos.z-camera.position.z, ld=Math.hypot(lx,lz)||1;
     if(w.melee){ if(ld<14) beep(210,.12,'square',clamp(.12-ld*.006,.02,.12),90); hearShot(this,10); }
     else {
-      const prof=(w.sound&&SHOT[w.sound])?w.sound:'enemy';
+      const prof=(w.sound&&WET[w.sound])?w.sound:'enemy';
       playShot(prof,1.3,0,this.pos); hearShot(this,72);   // roughly as loud as your own gun up close
       if(NET.on&&this.nid) netSend({t:'sh',n:this.nid,k:prof,x:+from.x.toFixed(2),y:+from.y.toFixed(2),z:+from.z.toFixed(2),tx:+to.x.toFixed(1),ty:+to.y.toFixed(1),tz:+to.z.toFixed(1)});
     }
@@ -3257,26 +3612,26 @@ function takePickup(p){
       if(old>1) P.bag.push(old);
       toast(`${w.short} 裝上 ${OPTICS[p.optic].label}`,1600);
     } else toast(`${OPTICS[p.optic].label} 收進背包（按 I 更換）`,1700);
-    beep(700,.1,'sine',.12,1000); updateSlots(); refreshBag(); removePickup(p); return true;
+    sfxPlop(true); updateSlots(); refreshBag(); removePickup(p); return true;
   }
   if(p.type==='helmet'&&P.helmet<100){
-    P.helmet=100; toast('戴上頭盔（擋住一半爆頭傷害）',1600); beep(620,.1,'sine',.12,880);
+    P.helmet=100; toast('戴上頭盔（擋住一半爆頭傷害）',1600); sfxPlop(true);
     removePickup(p); return true;
   }
   if(p.weapon){
     const first=giveWeapon(p.weapon,true);
     toast(first?`撿到 ${p.weapon.name}`:`${p.weapon.name} 補充彈藥 +${p.weapon.ammoPack}`,1600);
     if(first||curW<0||WEAPONS[curW].fists) switchWeapon(WEAPONS.indexOf(p.weapon));
-    updateSlots(); beep(760,.09,'sine',.12,1140); removePickup(p); return true;
+    updateSlots(); sfxPlop(true); removePickup(p); return true;
   }
   if(p.type==='ammo'){
     let got=false;
     WEAPONS.forEach(w=>{ if(w.have){ w.res=Math.min(w.ammoPack*3,w.res+Math.ceil(w.ammoPack*.6)); got=true; } });
     if(!got) return false;
-    toast('補滿腸氣',1300); beep(700,.08,'sine',.1,900); removePickup(p); return true;
+    toast('補滿腸氣',1300); sfxPlop(true); removePickup(p); return true;
   }
-  if(p.type==='hp'&&P.hp<maxHp()){ P.hp=Math.min(maxHp(),P.hp+50); toast('衛生紙 +50 體力',1500); beep(880,.08,'sine',.12,1320); removePickup(p); return true; }
-  if(p.type==='armor'&&P.armor<100){ P.armor=Math.min(100,P.armor+50); toast('尿布裝甲 +50 護甲',1500); beep(880,.08,'sine',.12,1320); removePickup(p); return true; }
+  if(p.type==='hp'&&P.hp<maxHp()){ P.hp=Math.min(maxHp(),P.hp+50); toast('衛生紙 +50 體力',1500); sfxPlop(true); removePickup(p); return true; }
+  if(p.type==='armor'&&P.armor<100){ P.armor=Math.min(100,P.armor+50); toast('尿布裝甲 +50 護甲',1500); sfxPlop(true); removePickup(p); return true; }
   return false;
 }
 
@@ -3357,7 +3712,7 @@ let bannerTO=0, toastTO=0, hitTO=0;
 function banner(t){ const b=$('banner'); b.textContent=t; b.classList.add('on'); clearTimeout(bannerTO); bannerTO=setTimeout(()=>b.classList.remove('on'),2800); }
 function toast(t,ms){ const b=$('toast'); b.textContent=t; b.hidden=false; clearTimeout(toastTO); toastTO=setTimeout(()=>b.hidden=true,ms||5000); }
 function feed(html,cls){ const f=$('feed'); const d=document.createElement('div'); d.innerHTML=html; if(cls) d.className=cls; f.prepend(d); while(f.children.length>6) f.lastChild.remove(); setTimeout(()=>d.remove(),6500); }
-function showHit(kill,head){ const h=$('hitmark'); h.className='hud'+(kill?' kill':'')+(head?' head':''); h.style.opacity=1; clearTimeout(hitTO); hitTO=setTimeout(()=>h.style.opacity=0,kill?280:130); if(kill) beep(head?900:700,.18,'triangle',.14,head?1800:1200); }
+function showHit(kill,head){ const h=$('hitmark'); h.className='hud'+(kill?' kill':'')+(head?' head':''); h.style.opacity=1; clearTimeout(hitTO); hitTO=setTimeout(()=>h.style.opacity=0,kill?280:130); if(kill) sfxPlop(true); }
 function hurtPlayer(dmg,from,attacker){
   if(P.down){ P.lastHitBy=attacker||null; P.downHp-=dmg*.8; if(P.downHp<=0) playerDie(attacker); return; }
   if(!P.alive||!inGame()) return;
@@ -3365,7 +3720,8 @@ function hurtPlayer(dmg,from,attacker){
   if(CH.crouchArmor&&P.crouch) dmg*=CH.crouchArmor;   // 馬桶騎士蹲下擋傷
   if(P.helmet>0){ const hb=Math.min(P.helmet,dmg*.3); P.helmet-=hb; dmg-=hb; }   // helmet takes the first bite
   if(P.armor>0){ const ab=Math.min(P.armor,dmg*.5); P.armor-=ab; dmg-=ab; }
-  P.hp-=dmg; hurtT=Math.min(1,hurtT+.45); beep(170,.12,'sawtooth',.07,90);
+  P.hp-=dmg; hurtT=Math.min(1,hurtT+.45); sfxHurt(dmg);
+  screenSplat(dmg>26?3:dmg>12?2:1,dmg>34);
   if(from){ const dx=from.x-P.pos.x, dz=from.z-P.pos.z; const fwd=-dx*Math.sin(P.yaw)-dz*Math.cos(P.yaw), rt=dx*Math.cos(P.yaw)-dz*Math.sin(P.yaw);
     const el=document.createElement('div'); el.className='dd'; el.style.transform=`rotate(${Math.atan2(rt,fwd)}rad)`; el.innerHTML='<i></i>'; document.body.appendChild(el); setTimeout(()=>el.remove(),1150); }
   if(P.hp<=0){
@@ -3434,13 +3790,13 @@ function attachOptic(gi,bagIdx){
   const w=WEAPONS[gi]; if(!w||w.melee||P.bag[bagIdx]==null) return;
   const incoming=P.bag[bagIdx]; P.bag.splice(bagIdx,1);
   const old=opticOf(w); if(old>1) P.bag.push(old);
-  w.optic=incoming; bagPick=-1; beep(700,.08,'sine',.1,980);
+  w.optic=incoming; bagPick=-1; sfxPlop(true);
   updateSlots(); refreshBag();
 }
 function detachOptic(gi){
   const w=WEAPONS[gi]; if(!w) return;
   const old=opticOf(w); if(old<=1) return;
-  P.bag.push(old); w.optic=1; beep(520,.08,'sine',.09,700);
+  P.bag.push(old); w.optic=1; sfxPlop(true);
   updateSlots(); refreshBag();
 }
 document.addEventListener('dragstart',e=>{
@@ -3888,6 +4244,7 @@ function resetGame(){
   for(const b of bots) scene.remove(b.group); bots=[];
   for(const p of pickups) scene.remove(p.g); pickups=[];
   for(const t of tracers) scene.remove(t.m); tracers.length=0;
+  clearFlying(); clearSplats();
   for(const p of particles) scene.remove(p.m); particles.length=0;
   for(const h of holes) scene.remove(h); holes.length=0;
   resetZone();
@@ -4256,7 +4613,8 @@ function netTick(dt){
     NET.sendT=.05;
     netSend({t:'st',x:+P.pos.x.toFixed(2),y:+P.pos.y.toFixed(2),z:+P.pos.z.toFixed(2),
       yaw:+P.yaw.toFixed(2),spd:+Math.min(9,NET.spd).toFixed(1),
-      fl:(P.alive?1:0)|(P.down?2:0)|(P.crouch?4:0)|(aiming?8:0)|(P.dropMode?16:0)|(keys.KeyF?32:0)});
+      fl:(P.alive?1:0)|(P.down?2:0)|(P.crouch?4:0)|(aiming?8:0)|(P.dropMode?16:0)|(keys.KeyF?32:0),
+      ch:CHAR_IDS.indexOf(CH.id)});
   }
   if(netHost()){ NET.snapT-=dt; if(NET.snapT<=0){ NET.snapT=.055; netSendSnap(); } }
 }
@@ -4295,6 +4653,7 @@ function netApplyState(m){
   netPush(ent,m.x,m.y,m.z,m.yaw,m.spd);
   ent.crouch=!!(m.fl&4); ent.netAim=!!(m.fl&8); ent.down=!!(m.fl&2);
   ent.netAir=!!(m.fl&16); ent.netRev=!!(m.fl&32);
+  if(m.ch>=0&&ent.setChar) ent.setChar(CHAR_IDS[m.ch]);
   if(!!(m.fl&1)!==ent.alive) netSetAlive(ent,!!(m.fl&1));
 }
 function netSetAlive(ent,alive){
@@ -4432,6 +4791,7 @@ function showScreen(which){
   $('scrHelp').hidden=which!=='help';
   $('scrNet').hidden=which!=='net';
   $('scrSeats').hidden=which!=='seats';
+  $('scrChars').hidden=which!=='chars';
   if(which==='home') refreshAudioNote();
 }
 // every button in a menu clicks back at you
@@ -4536,10 +4896,101 @@ $('modes').addEventListener('click',e=>{
   if(MODE.defMinutes) SET.minutes=MODE.defMinutes;
   buildSetup(); showScreen('setup'); previewMap();
 });
+
+/* ========== 角色頭像：跟場上那個人長一樣 ========== */
+const POOP_SWIRL='M50 86c-14 0-23-5-23-11 0-5 5-8 12-9-9-1-15-5-15-10 0-6 7-9 16-10-7-2-11-5-11-9 0-6 8-10 18-10 4 0 7 1 10 2-3-2-5-4-5-6 0-4 5-7 11-7s11 3 11 7c0 3-3 6-8 8 9 1 15 5 15 10 0 4-4 7-11 9 9 1 16 5 16 10 0 5-6 9-15 10 7 1 12 4 12 9 0 6-9 11-23 11z';
+function charArt(id){
+  const sk='#d6a17c', eye='#17191c', mouth='#8a4034';
+  const legs=(c)=>`<rect x="39" y="72" width="8" height="20" rx="4" fill="${c}"/><rect x="53" y="72" width="8" height="20" rx="4" fill="${c}"/>`+
+    `<ellipse cx="43" cy="93" rx="7" ry="4" fill="#1d2024"/><ellipse cx="57" cy="93" rx="7" ry="4" fill="#1d2024"/>`;
+  const arms=(c)=>`<rect x="20" y="42" width="9" height="28" rx="4.5" fill="${c}"/><rect x="71" y="42" width="9" height="28" rx="4.5" fill="${c}"/>`;
+  const body=(c)=>`<rect x="28" y="38" width="44" height="38" rx="14" fill="${c}"/>`;
+  const face=(f)=>`<circle cx="50" cy="24" r="16" fill="${f||sk}"/>`;
+  const eyes=(dy,r)=>`<circle cx="43" cy="${24+(dy||0)}" r="${r||2.6}" fill="${eye}"/><circle cx="57" cy="${24+(dy||0)}" r="${r||2.6}" fill="${eye}"/>`;
+  const shade=`<ellipse cx="50" cy="96" rx="26" ry="4" fill="rgba(0,0,0,.3)"/>`;
+  let g='';
+  if(id==='norm'){
+    g=shade+legs('#3f5668')+arms('#4a6d86')+body('#4a6d86')+face()+eyes()+
+      `<path d="M44 32q6 4 12 0" stroke="${mouth}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`+
+      `<path d="M33 20a17 17 0 0 1 34 0z" fill="#333a40"/><rect x="31" y="19" width="38" height="4" rx="2" fill="#262c31"/>`+
+      `<rect x="38" y="22" width="24" height="5" rx="2" fill="#12161a"/>`;
+  }
+  if(id==='jet'){
+    g=shade+legs('#4e6b3f')+arms('#5f8a48')+
+      `<rect x="31" y="40" width="38" height="34" rx="13" fill="#5f8a48"/>`+
+      face('#9ec48a')+
+      `<circle cx="43" cy="25" r="3.4" fill="${eye}"/><circle cx="57" cy="25" r="3.4" fill="${eye}"/>`+
+      `<ellipse cx="50" cy="34" rx="6" ry="4" fill="#3d2b22"/>`+
+      `<rect x="32" y="14" width="36" height="6" rx="3" fill="#4a7034"/><path d="M68 14l10 5-10 4z" fill="#4a7034"/>`+
+      `<path d="M28 60q-12 4-20 0" stroke="#6d4722" stroke-width="5" fill="none" stroke-linecap="round" opacity=".8"/>`+
+      `<path d="M72 60q12 4 20 0" stroke="#6d4722" stroke-width="5" fill="none" stroke-linecap="round" opacity=".8"/>`+
+      `<circle cx="12" cy="66" r="4" fill="#6d4722"/><circle cx="88" cy="66" r="4" fill="#6d4722"/>`+
+      `<circle cx="6" cy="73" r="2.6" fill="#7c5226"/><circle cx="94" cy="73" r="2.6" fill="#7c5226"/>`;
+  }
+  if(id==='jam'){
+    g=shade+legs('#5a4a3c')+arms('#6b5a48')+
+      `<ellipse cx="50" cy="60" rx="27" ry="21" fill="#c8785e"/>`+
+      `<ellipse cx="50" cy="58" rx="19" ry="13" fill="#d68c6e" opacity=".55"/>`+
+      face('#d8705a')+
+      `<path d="M38 18l7 5M62 18l-7 5" stroke="#7a2b22" stroke-width="3" stroke-linecap="round"/>`+
+      `<circle cx="43" cy="26" r="2.2" fill="${eye}"/><circle cx="57" cy="26" r="2.2" fill="${eye}"/>`+
+      `<path d="M43 34q7-5 14 0" stroke="#5e2018" stroke-width="3" fill="none" stroke-linecap="round"/>`+
+      `<path d="M36 12q3 6 0 10M64 12q-3 6 0 10" stroke="#8a3d2c" stroke-width="2.4" fill="none" stroke-linecap="round"/>`+
+      `<path d="M22 44q-6-4-4-10M78 44q6-4 4-10" stroke="#c0c6cb" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".6"/>`;
+  }
+  if(id==='rush'){
+    g=shade+
+      `<rect x="41" y="72" width="8" height="20" rx="4" fill="#c9ad2a" transform="rotate(7 45 82)"/>`+
+      `<rect x="51" y="72" width="8" height="20" rx="4" fill="#c9ad2a" transform="rotate(-7 55 82)"/>`+
+      `<ellipse cx="50" cy="95" rx="18" ry="5" fill="#d9c84e" opacity=".85"/>`+
+      arms('#f0d44a')+body('#f0d44a')+
+      `<path d="M50 66q4 8 0 16" stroke="#e8c93a" stroke-width="3.4" fill="none" stroke-linecap="round"/>`+
+      face()+
+      `<path d="M32 22a18 18 0 0 1 36 0q0 6-4 8H36q-4-2-4-8z" fill="#f0d44a"/>`+
+      `<circle cx="43" cy="27" r="4.6" fill="#fff"/><circle cx="57" cy="27" r="4.6" fill="#fff"/>`+
+      `<circle cx="43" cy="27" r="2.4" fill="${eye}"/><circle cx="57" cy="27" r="2.4" fill="${eye}"/>`+
+      `<ellipse cx="50" cy="36" rx="4" ry="3" fill="#7a3a30"/>`+
+      `<path d="M16 48l-9-5M18 58l-10 1M84 48l9-5M82 58l10 1" stroke="#e8c93a" stroke-width="2.6" stroke-linecap="round" opacity=".75"/>`;
+  }
+  if(id==='tank'){
+    g=shade+
+      `<rect x="34" y="78" width="12" height="14" rx="6" fill="#4a2f12"/><rect x="54" y="78" width="12" height="14" rx="6" fill="#4a2f12"/>`+
+      `<ellipse cx="50" cy="60" rx="34" ry="26" fill="#6d4722"/>`+
+      `<circle cx="19" cy="48" r="11" fill="#53350f"/><circle cx="81" cy="48" r="11" fill="#53350f"/>`+
+      `<ellipse cx="50" cy="52" rx="22" ry="13" fill="#7c5226" opacity=".5"/>`+
+      `<circle cx="50" cy="26" r="13" fill="#8a6436"/>`+
+      `<path d="M41 17q9-8 18 0q2 6-9 7q-11-1-9-7z" fill="#53350f"/>`+
+      `<circle cx="45" cy="27" r="2.2" fill="${eye}"/><circle cx="55" cy="27" r="2.2" fill="${eye}"/>`+
+      `<path d="M44 34q6 3 12 0" stroke="#4a2f12" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+  }
+  if(id==='lid'){
+    g=shade+legs('#5c6166')+arms('#7d848a')+body('#7d848a')+
+      `<rect x="34" y="44" width="32" height="26" rx="6" fill="#f3f0e7"/>`+
+      `<rect x="40" y="50" width="20" height="4" rx="2" fill="#d8d2c4"/>`+
+      face()+eyes(2)+
+      `<path d="M44 34q6 3 12 0" stroke="${mouth}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`+
+      `<ellipse cx="50" cy="13" rx="25" ry="7" fill="#f3f0e7"/>`+
+      `<ellipse cx="50" cy="11" rx="25" ry="6" fill="#fffdf6"/>`+
+      `<rect x="46" y="4" width="8" height="5" rx="2" fill="#b8b2a4"/>`+
+      `<ellipse cx="50" cy="19" rx="17" ry="4.6" fill="#dcd6c6"/>`;
+  }
+  if(id==='eat'){
+    g=shade+legs('#4e4a40')+arms('#6b6250')+body('#6b6250')+
+      `<circle cx="30" cy="62" r="7" fill="#53350f" opacity=".75"/><circle cx="68" cy="52" r="5" fill="#53350f" opacity=".7"/>`+
+      face()+
+      `<path d="M38 23q5-4 10 0M52 23q5-4 10 0" stroke="${eye}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`+
+      `<ellipse cx="50" cy="33" rx="10" ry="6.5" fill="#6d4722"/>`+
+      `<ellipse cx="50" cy="31" rx="7" ry="3.4" fill="#53350f"/>`+
+      `<circle cx="39" cy="31" r="2.4" fill="#6d4722"/><circle cx="62" cy="34" r="2" fill="#6d4722"/>`+
+      `<g transform="translate(46 44) scale(.3)"><path d="${POOP_SWIRL}" fill="#6d4722"/></g>`+
+      `<path d="M30 10q4-5 8 0M62 10q4-5 8 0" stroke="#8ec98f" stroke-width="2" fill="none" stroke-linecap="round" opacity=".8"/>`;
+  }
+  return `<svg class="cart" viewBox="0 0 100 100" aria-hidden="true">${g}</svg>`;
+}
 function renderChars(){
   const html=CHARS.map(c=>`<button class="charcard${c.id===SET.char?' on':''}" data-ch="${c.id}">
     <span class="hpn">${c.hp||100} HP</span>
-    <span class="emo">${c.emo}</span>
+    ${charArt(c.id)}
     <b>${c.name}</b>
     <span class="ct">${c.tag}</span>
     <span class="cg"><s>▲</s>${c.good}</span>
@@ -4640,6 +5091,24 @@ function onStartClick(){
 $('startBtn').addEventListener('click',onStartClick);
 $('againBtn').addEventListener('click',()=>{ if(NET.on){ $('end').hidden=true; $('menu').hidden=false; showScreen('net'); netRoomUI(); } else onStartClick(); });
 $('menuBtn').addEventListener('click',toMenu);
+$('goChars').addEventListener('click',()=>{ clickBeep(); renderCharDoc(); showScreen('chars'); });
+$('backFromChars').addEventListener('click',()=>{ clickBeep(); showScreen('home'); });
+$('charDoc').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-ch]'); if(!b) return;
+  SET.char=b.dataset.ch; applyChar(); clickBeep(); renderCharDoc(); renderChars();
+  toast('選好了：'+CH.name,1600);
+});
+function renderCharDoc(){
+  $('charDoc').innerHTML=CHARS.map(c=>`<button class="cdoc${c.id===SET.char?' on':''}" data-ch="${c.id}">
+    <div class="cdoc-art">${charArt(c.id)}<span class="cdoc-hp">${c.hp||100}</span></div>
+    <div class="cdoc-txt">
+      <b>${c.name}</b><span class="ct">${c.tag}</span>
+      <p>${c.story||''}</p>
+      <span class="cg"><s>▲ 強</s>${c.good}</span>
+      <span class="cb"><s>▼ 弱</s>${c.bad}</span>
+      <span class="cpick">${c.id===SET.char?'✓ 目前選這個':'點一下選他'}</span>
+    </div></button>`).join('');
+}
 $('goNet').addEventListener('click',()=>{ clickBeep(); netErrMsg(''); netRoomUI(); showScreen('net'); });
 $('netBack').addEventListener('click',()=>{ clickBeep(); netQuit(); showScreen('home'); });
 $('netLeave').addEventListener('click',()=>{ clickBeep(); netQuit(); });
@@ -4841,6 +5310,7 @@ function updateHUD(dt){
   if(bigMap) drawBigMap();
 }
 function updateFx(dt){
+  updateFlying(dt);
   for(let i=tracers.length-1;i>=0;i--){ const t=tracers[i]; t.life-=dt; if(t.life<=0){ scene.remove(t.m); tracers.splice(i,1); } }
   for(let i=particles.length-1;i>=0;i--){ const p=particles[i]; p.life-=dt; p.v.y-=9*dt; p.m.position.addScaledVector(p.v,dt); if(p.life<=0||p.m.position.y<0){ scene.remove(p.m); particles.splice(i,1); } }
   lootCullT-=dt;
@@ -4968,7 +5438,7 @@ if(typeof location!=='undefined'&&location.hash==='#dev') window.__dev={
   faceFirst(){ const e=[...NET.ents.values()][0]; if(!e) return 'none'; P.pos.set(e.pos.x,e.pos.y,e.pos.z+3.2); P.yaw=Math.atan2(-(e.pos.x-P.pos.x),-(e.pos.z-P.pos.z)); P.pitch=-.03; return e.name; },
   get score(){return teamScore}, get mt(){return matchT},
   get SEAT(){return SEAT}, get seed(){return WORLDSEED},
-  get props(){ return THEME_PROPS; },
+  get props(){ return THEME_PROPS; }, get piles(){ return PILE_POS; },
   CHARS, char(id){ if(id){ SET.char=id; applyChar(); } return CH.name+' maxHp='+maxHp(); },
   seatPick(i){ const b=$('seatGrid').querySelector('button[data-i="'+i+'"]'); if(!b) return 'no seat '+i; b.click(); return 'clicked '+i; },
   seatScreen(){ return {open:SEAT.open, shown:$('scrSeats').hidden?'hidden':'visible', html:$('seatGrid').textContent.trim(), hint:$('seatHint').textContent}; },
